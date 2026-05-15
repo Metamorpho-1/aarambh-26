@@ -60,11 +60,10 @@ export default function Registrations() {
   const totalPages = Math.ceil(registrations.length / itemsPerPage);
 
   const exportCSV = async () => {
-    const headers = ['Name', 'Registration Number', 'Cohort', 'Year', 'Email', 'Phone', 'Registration Time', 'Entry Status', 'Father Name', 'Father Mobile', 'Mother Name', 'Mother Mobile', 'Address', 'Cohort Leader'];
+    const headers = ['Name', 'Registration Number', 'Year', 'Email', 'Phone', 'Registration Time', 'Entry Status', 'Father Name', 'Father Mobile', 'Mother Name', 'Mother Mobile', 'Address'];
     const rows = sortedRegistrations.map(r => [
       `"${r.name || ''}"`,
       `"${r.rollNumber || ''}"`,
-      `"${r.branch || ''}"`,
       r.year || '',
       `"${r.email || ''}"`,
       `"${r.phone || ''}"`,
@@ -74,8 +73,7 @@ export default function Registrations() {
       `"${r.fatherMobile || ''}"`,
       `"${r.motherName || ''}"`,
       `"${r.motherMobile || ''}"`,
-      `"${(r.address || '').replace(/"/g, '""')}"`,
-      `"${r.cohortLeader || ''}"`
+      `"${(r.address || '').replace(/"/g, '""')}"`
     ]);
 
     const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\\n');
@@ -121,7 +119,7 @@ export default function Registrations() {
                 <tr className="bg-admin-bg/50 border-b border-admin-border text-admin-muted text-xs uppercase tracking-wider">
                   <th className="p-4 font-medium cursor-pointer hover:text-white" onClick={() => handleSort('name')}>Name {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
                   <th className="p-4 font-medium cursor-pointer hover:text-white" onClick={() => handleSort('rollNumber')}>Roll No. {sortField === 'rollNumber' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
-                  <th className="p-4 font-medium cursor-pointer hover:text-white" onClick={() => handleSort('branch')}>Branch {sortField === 'branch' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+                  <th className="p-4 font-medium cursor-pointer hover:text-white" onClick={() => handleSort('email')}>Email {sortField === 'email' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
                   <th className="p-4 font-medium cursor-pointer hover:text-white" onClick={() => handleSort('year')}>Year {sortField === 'year' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
                   <th className="p-4 font-medium cursor-pointer hover:text-white" onClick={() => handleSort('registeredAt')}>Registration Time {sortField === 'registeredAt' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
                   <th className="p-4 font-medium cursor-pointer hover:text-white" onClick={() => handleSort('hasEntered')}>Status {sortField === 'hasEntered' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
@@ -133,7 +131,7 @@ export default function Registrations() {
                   <tr key={reg.id} className="hover:bg-white/5 transition-colors text-sm">
                     <td className="p-4 font-medium">{reg.name}</td>
                     <td className="p-4">{reg.rollNumber}</td>
-                    <td className="p-4">{reg.branch}</td>
+                    <td className="p-4 text-admin-muted">{reg.email}</td>
                     <td className="p-4">{reg.year}</td>
                     <td className="p-4 text-admin-muted">
                       {reg.registeredAt ? reg.registeredAt.toDate().toLocaleString() : ''}
@@ -196,14 +194,6 @@ export default function Registrations() {
               <div>
                 <p className="text-xs text-admin-muted mb-1">Phone</p>
                 <p className="font-medium">{selectedReg.phone}</p>
-              </div>
-              <div>
-                <p className="text-xs text-admin-muted mb-1">Cohort Name & Number</p>
-                <p className="font-medium">{selectedReg.branch}</p>
-              </div>
-              <div>
-                <p className="text-xs text-admin-muted mb-1">Cohort Leader</p>
-                <p className="font-medium">{selectedReg.cohortLeader || 'N/A'}</p>
               </div>
               
               <div className="col-span-2 border-t border-admin-border pt-4 mt-2">

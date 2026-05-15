@@ -5,17 +5,19 @@ import { useRouter } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, collection, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
-import { Html5QrcodeScanner } from 'html5-qrcode';
-import { Loader2, LogOut } from 'lucide-react';
+import { Html5Qrcode } from 'html5-qrcode';
+import { Loader2, LogOut, Camera, Check, X, User, AlertCircle, Mail, Phone, ShieldCheck, MapPin } from 'lucide-react';
 
 export default function ScannerView() {
   const [loading, setLoading] = useState(true);
   const [scannerAccount, setScannerAccount] = useState<any>(null);
-  const [flash, setFlash] = useState<'success' | 'error' | null>(null);
-  const [message, setMessage] = useState('');
+  const [scannedData, setScannedData] = useState<any>(null);
+  const [status, setStatus] = useState<{ type: 'success' | 'error' | 'idle', message: string }>({ type: 'idle', message: '' });
+  const [cameraError, setCameraError] = useState(false);
+  const [processingAction, setProcessingAction] = useState(false);
   const router = useRouter();
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
-  const isProcessing = useRef(false);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const isScanning = useRef(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -29,12 +31,6 @@ export default function ScannerView() {
           const accountDoc = await getDoc(doc(db, 'scannerAccounts', user.uid));
           if (accountDoc.exists()) {
             setScannerAccount(accountDoc.data());
-            
-            // Update lastActiveAt
-            await updateDoc(doc(db, 'scannerAccounts', user.uid), {
-              lastActiveAt: serverTimestamp()
-            });
-            
             setLoading(false);
           } else {
             router.push('/login');
@@ -51,83 +47,96 @@ export default function ScannerView() {
   }, [router]);
 
   useEffect(() => {
-    if (!loading && scannerAccount) {
-      if (!scannerRef.current) {
-        scannerRef.current = new Html5QrcodeScanner(
-          "qr-reader",
-          { fps: 10, qrbox: { width: 250, height: 250 } },
-          false
-        );
-
-        scannerRef.current.render(onScanSuccess, onScanFailure);
-      }
+    if (!loading && scannerAccount && !scannedData) {
+      const startScanner = async () => {
+        try {
+          const scanner = new Html5Qrcode("qr-reader");
+          scannerRef.current = scanner;
+          
+          await scanner.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            onScanSuccess,
+            () => {}
+          );
+          isScanning.current = true;
+        } catch (e) {
+          setCameraError(true);
+        }
+      };
+      startScanner();
     }
 
     return () => {
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(console.error);
-        scannerRef.current = null;
+      if (scannerRef.current && scannerRef.current.isScanning) {
+        scannerRef.current.stop().catch(console.error);
       }
     };
-  }, [loading, scannerAccount]);
-
-  const showFlash = (type: 'success' | 'error', text: string) => {
-    setFlash(type);
-    setMessage(text);
-    setTimeout(() => {
-      setFlash(null);
-      setMessage('');
-      isProcessing.current = false;
-    }, 2500);
-  };
+  }, [loading, scannerAccount, scannedData]);
 
   const onScanSuccess = async (decodedText: string) => {
-    if (isProcessing.current) return;
-    isProcessing.current = true;
+    if (!isScanning.current) return;
+    isScanning.current = false;
 
     try {
-      const fresherUID = decodedText;
-      const regDocRef = doc(db, 'registrations', fresherUID);
-      const regDoc = await getDoc(regDocRef);
+      const regID = decodedText.trim();
+      const regDoc = await getDoc(doc(db, 'registrations', regID));
 
       if (!regDoc.exists()) {
-        await logScan(fresherUID, 'Unknown', 'rejected');
-        showFlash('error', 'Entry Rejected: Invalid QR');
-        return;
+        setStatus({ type: 'error', message: 'INVALID QR CODE' });
+        setTimeout(() => {
+          setStatus({ type: 'idle', message: '' });
+          isScanning.current = true;
+        }, 2000);
+      } else {
+        const data = regDoc.data();
+        setScannedData({ ...data, id: regID });
+        if (scannerRef.current) await scannerRef.current.stop();
       }
-
-      const regData = regDoc.data();
-      if (regData.hasEntered) {
-        await logScan(fresherUID, regData.name, 'rejected');
-        showFlash('error', `Entry Rejected: ${regData.name} already entered.`);
-        return;
-      }
-
-      // Valid entry
-      await updateDoc(regDocRef, { hasEntered: true });
-      await logScan(fresherUID, regData.name, 'accepted');
-      showFlash('success', `Entry Accepted: ${regData.name}`);
-
     } catch (error) {
-      console.error(error);
-      showFlash('error', 'Entry Rejected: System Error');
+      setStatus({ type: 'error', message: 'FETCH ERROR' });
+      isScanning.current = true;
     }
   };
 
-  const logScan = async (fresherUID: string, fresherName: string, result: 'accepted' | 'rejected') => {
-    if (!scannerAccount) return;
-    await addDoc(collection(db, 'scanLogs'), {
-      scannerId: scannerAccount.scannerId || auth.currentUser?.uid,
-      volunteerName: scannerAccount.volunteerName || 'Unknown',
-      fresherUID,
-      fresherName,
-      timestamp: serverTimestamp(),
-      result
-    });
-  };
+  const handleAction = async (approved: boolean) => {
+    if (processingAction || !scannedData) return;
+    setProcessingAction(true);
 
-  const onScanFailure = (error: any) => {
-    // Ignore frequent scan failures
+    try {
+      if (approved) {
+        if (scannedData.hasEntered) {
+          setStatus({ type: 'error', message: 'ALREADY ENTERED' });
+        } else {
+          await updateDoc(doc(db, 'registrations', scannedData.id), {
+            hasEntered: true,
+            enteredAt: serverTimestamp(),
+            enteredBy: scannerAccount.volunteerName
+          });
+          
+          await addDoc(collection(db, 'scanLogs'), {
+            scannerId: scannerAccount.scannerId,
+            volunteerName: scannerAccount.volunteerName,
+            registrationID: scannedData.id,
+            attendeeName: scannedData.name,
+            timestamp: serverTimestamp(),
+            result: 'accepted'
+          });
+          
+          setStatus({ type: 'success', message: 'ENTRY APPROVED' });
+        }
+      } else {
+        setStatus({ type: 'idle', message: 'ENTRY DECLINED' });
+      }
+    } catch (e) {
+      setStatus({ type: 'error', message: 'ACTION FAILED' });
+    }
+
+    setTimeout(() => {
+      setScannedData(null);
+      setStatus({ type: 'idle', message: '' });
+      setProcessingAction(false);
+    }, 2000);
   };
 
   const handleLogout = async () => {
@@ -136,48 +145,141 @@ export default function ScannerView() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loader2 className="animate-spin text-white" size={48} />
-      </div>
-    );
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><Loader2 className="animate-spin text-yellow-500" size={32} /></div>;
   }
 
   return (
-    <div className="min-h-screen bg-black text-white relative flex flex-col font-adminBody">
-      {/* Flash overlay */}
-      {flash && (
-        <div 
-          className={`absolute inset-0 z-50 flex items-center justify-center p-8 text-center transition-opacity duration-300 ${
-            flash === 'success' ? 'bg-green-500' : 'bg-red-500'
-          }`}
-        >
-          <h1 className="text-4xl md:text-6xl font-black uppercase tracking-wider text-white drop-shadow-lg">
-            {message}
-          </h1>
+    <div className="min-h-screen bg-white text-gray-900 font-sans flex flex-col overflow-hidden">
+      <header className="bg-yellow-400 p-4 flex justify-between items-center shadow-sm z-10">
+        <div className="flex items-center gap-3">
+          <Camera size={20} />
+          <div>
+            <h1 className="font-bold text-base">Gate Control</h1>
+            <p className="text-[10px] uppercase font-bold text-black/60">{scannerAccount?.volunteerName}</p>
+          </div>
         </div>
-      )}
-
-      {/* Header */}
-      <header className="p-4 flex justify-between items-center border-b border-white/10 z-10">
-        <div>
-          <h2 className="font-adminHeading text-xl font-bold">Scanner Mode</h2>
-          <p className="text-xs text-gray-400">Vol: {scannerAccount?.volunteerName}</p>
-        </div>
-        <button onClick={handleLogout} className="p-2 bg-white/10 rounded-lg hover:bg-white/20">
-          <LogOut size={20} />
-        </button>
+        <button onClick={handleLogout} className="p-2 cursor-pointer hover:bg-black/5 rounded-full transition-colors active:bg-black/10"><LogOut size={18} /></button>
       </header>
 
-      {/* Scanner Container */}
-      <main className="flex-1 flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-sm bg-white/5 rounded-xl overflow-hidden border border-white/10 shadow-2xl">
-          <div id="qr-reader" className="w-full"></div>
-        </div>
-        <p className="mt-8 text-gray-400 text-sm text-center">
-          Point camera at attendee QR code.
-        </p>
+      <main className="flex-1 flex flex-col items-center p-6 gap-6 overflow-hidden">
+        {status.message && (
+          <div className={`w-full max-w-md p-4 border-2 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 ${
+            status.type === 'success' ? 'bg-green-50 border-green-500 text-green-700' :
+            status.type === 'error' ? 'bg-red-50 border-red-500 text-red-700' : 'bg-gray-100 border-gray-400 text-gray-600'
+          }`}>
+            {status.type === 'success' ? <Check size={20} /> : <AlertCircle size={20} />}
+            <span className="font-bold uppercase text-xs tracking-widest">{status.message}</span>
+          </div>
+        )}
+
+        {!scannedData ? (
+          <>
+            <div className="w-full max-w-sm aspect-square bg-gray-100 border-2 border-gray-200 overflow-hidden relative shadow-inner">
+              {cameraError ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
+                  <AlertCircle className="text-gray-400 mb-2" size={32} />
+                  <p className="text-xs font-bold text-gray-400 uppercase">Camera Blocked</p>
+                </div>
+              ) : (
+                <div id="qr-reader" className="w-full h-full"></div>
+              )}
+            </div>
+            <p className="text-gray-400 text-[10px] font-bold uppercase tracking-[0.3em] animate-pulse">Scanning Live...</p>
+          </>
+        ) : (
+          <div className="w-full max-w-md bg-white border-4 border-gray-900 p-6 flex flex-col animate-in zoom-in-95 duration-200 overflow-hidden max-h-[85vh]">
+            <div className="flex justify-between items-start mb-4 flex-shrink-0">
+              <h2 className="text-2xl font-black uppercase tracking-tighter italic">Verify Entry</h2>
+              <div className={`px-2 py-1 text-[10px] font-black uppercase border ${scannedData.hasEntered ? 'bg-red-50 text-red-600 border-red-200' : 'bg-green-50 text-green-600 border-green-200'}`}>
+                {scannedData.hasEntered ? 'Already In' : 'New Entry'}
+              </div>
+            </div>
+
+            <div className="space-y-6 overflow-y-auto pr-2 mb-6 scrollbar-thin scrollbar-thumb-gray-200">
+              {/* Student Info */}
+              <div className="space-y-4">
+                <div className="flex gap-4 items-start">
+                  <div className="w-10 h-10 bg-gray-100 flex items-center justify-center text-gray-500 flex-shrink-0 border border-gray-200"><User size={20} /></div>
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Student Name</p>
+                    <p className="font-bold text-xl leading-tight">{scannedData.name}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-start">
+                  <div className="w-10 h-10 bg-gray-100 flex items-center justify-center text-gray-500 flex-shrink-0 border border-gray-200"><Mail size={20} /></div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Email Address</p>
+                    <p className="font-bold text-sm leading-tight break-all">{scannedData.email}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-start">
+                  <div className="w-10 h-10 bg-gray-100 flex items-center justify-center text-gray-500 flex-shrink-0 border border-gray-200"><Phone size={20} /></div>
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Mobile Number</p>
+                    <p className="font-bold text-lg leading-tight">{scannedData.phone}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Family Details */}
+              <div className="pt-4 border-t border-gray-200 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <ShieldCheck size={14} className="text-gray-400" />
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Guardian Details</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-gray-50 p-3 border border-gray-100">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Father</p>
+                    <p className="font-bold text-sm">{scannedData.fatherName || 'N/A'}</p>
+                    <p className="text-[10px] text-gray-500 font-mono mt-1">{scannedData.fatherMobile || '-'}</p>
+                  </div>
+                  <div className="bg-gray-50 p-3 border border-gray-100">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Mother</p>
+                    <p className="font-bold text-sm">{scannedData.motherName || 'N/A'}</p>
+                    <p className="text-[10px] text-gray-500 font-mono mt-1">{scannedData.motherMobile || '-'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Address */}
+              <div className="pt-4 border-t border-gray-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <MapPin size={14} className="text-gray-400" />
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Residential Address</p>
+                </div>
+                <div className="bg-gray-50 p-4 border border-gray-100">
+                  <p className="text-xs font-bold text-gray-600 leading-relaxed uppercase tracking-tight">{scannedData.address || 'No address provided'}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-200 flex-shrink-0">
+              <button 
+                disabled={processingAction}
+                onClick={() => handleAction(false)}
+                className="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-600 font-bold py-4 uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 cursor-pointer transition-colors"
+              >
+                <X size={14} /> Decline
+              </button>
+              <button 
+                disabled={processingAction || scannedData.hasEntered}
+                onClick={() => handleAction(true)}
+                className="bg-black hover:bg-zinc-800 active:bg-zinc-700 text-white font-bold py-4 uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer transition-colors"
+              >
+                <Check size={14} /> Approve
+              </button>
+            </div>
+          </div>
+        )}
       </main>
+
+      <style jsx global>{`
+        #qr-reader { border: none !important; width: 100% !important; height: 100% !important; }
+        #qr-reader video { object-fit: cover !important; width: 100% !important; height: 100% !important; }
+        .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+      `}</style>
     </div>
   );
 }

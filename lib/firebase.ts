@@ -16,7 +16,8 @@ const app: FirebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) 
 
 export const auth: Auth = getAuth(app);
 export const db: Firestore = initializeFirestore(app, {
-  localCache: persistentLocalCache()
+  // Only use persistence on the client side to avoid server-side crashes
+  localCache: typeof window !== 'undefined' ? persistentLocalCache() : undefined
 });
 export const storage: FirebaseStorage = getStorage(app);
 

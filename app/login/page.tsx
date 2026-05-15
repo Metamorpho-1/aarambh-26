@@ -27,89 +27,88 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const uid = userCredential.user.uid;
 
-      // Check role
       const roleDoc = await getDoc(doc(db, 'roles', uid));
       if (roleDoc.exists()) {
         const role = roleDoc.data().role;
-        if (role === 'admin') {
-          router.push('/admin');
-        } else if (role === 'scanner') {
-          router.push('/scanner');
-        } else {
-          setError('Invalid role assigned.');
-        }
+        if (role === 'admin') router.push('/admin');
+        else if (role === 'scanner') router.push('/scanner');
+        else setError('Access denied: Invalid role.');
       } else {
-        // Fallback for missing role document
         setError('Unauthorized account.');
-        auth.signOut();
+        await auth.signOut();
       }
     } catch (err: any) {
       console.error('Login error:', err);
-      if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-        setError('Invalid email or password.');
-      } else if (err.code === 'auth/unauthorized-domain') {
-        setError('This domain (localhost) is not authorized in Firebase Console.');
-      } else {
-        setError(err.message || 'An unexpected error occurred.');
-      }
+      setError('Invalid email or password.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-admin-bg text-admin-text font-adminBody flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-admin-surface border border-admin-border rounded-xl p-8 shadow-2xl">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 font-sans">
+      <div className="w-full max-w-[360px]">
+        {/* Simple Header */}
         <div className="mb-8 text-center">
-          <img src="/logo.png" alt="Aarambh Logo" className="h-20 w-auto mx-auto mb-6 object-contain mix-blend-multiply contrast-[1.1] brightness-[1.1]" />
-          <h1 className="font-adminHeading text-2xl font-bold mb-2 text-admin-text">Admin Portal</h1>
-          <p className="text-admin-muted text-sm">Sign in to access your dashboard</p>
+          <div className="w-16 h-16 bg-yellow-400 mx-auto mb-4 flex items-center justify-center">
+            <Lock size={32} />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">AARAMBH &apos;26</h1>
+          <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mt-1">Management Portal</p>
         </div>
 
-        {error && (
-          <div className="mb-6 p-3 bg-red-500/10 border border-red-500/50 text-red-500 text-sm rounded-lg text-center">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium mb-2 text-admin-muted">Email Address</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-muted" size={18} />
-              <input
-                type="email"
-                suppressHydrationWarning={true}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-admin-bg border border-admin-border rounded-lg py-2.5 pl-10 pr-4 focus:outline-none focus:border-admin-accent focus:ring-1 focus:ring-admin-accent transition-colors"
-                placeholder="admin@aarambh.com"
-              />
+        {/* Simple Light Card */}
+        <div className="bg-white border-2 border-gray-200 p-8">
+          {error && (
+            <div className="mb-6 p-3 bg-red-50 text-red-700 text-xs font-bold border border-red-100 text-center uppercase">
+              {error}
             </div>
-          </div>
+          )}
 
-          <div>
-            <label className="block text-sm font-medium mb-2 text-admin-muted">Password</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-muted" size={18} />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-admin-bg border border-admin-border rounded-lg py-2.5 pl-10 pr-4 focus:outline-none focus:border-admin-accent focus:ring-1 focus:ring-admin-accent transition-colors"
-                placeholder="••••••••"
-              />
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-gray-400 mb-2">Email Address</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-white border border-gray-200 rounded-none py-2.5 pl-10 pr-4 focus:outline-none focus:border-yellow-400 text-sm"
+                  placeholder="admin@jklu.edu.in"
+                  required
+                />
+              </div>
             </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-admin-accent hover:bg-yellow-500 text-black font-semibold py-2.5 rounded-lg transition-colors flex justify-center items-center gap-2"
-          >
-            {loading ? <Loader2 className="animate-spin" size={20} /> : 'Sign In'}
-          </button>
-        </form>
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-gray-400 mb-2">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-white border border-gray-200 rounded-none py-2.5 pl-10 pr-4 focus:outline-none focus:border-yellow-400 text-sm"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 text-black font-bold py-3 transition-colors flex justify-center items-center gap-2 cursor-pointer"
+            >
+              {loading ? <Loader2 className="animate-spin" size={18} /> : <span className="uppercase tracking-widest text-[10px]">Sign In</span>}
+            </button>
+          </form>
+        </div>
+
+        <p className="mt-8 text-center text-gray-400 text-[10px] uppercase font-bold tracking-widest">
+          JK Lakshmipat University
+        </p>
       </div>
     </div>
   );

@@ -5,7 +5,6 @@ import { ArrowRight, ShieldCheck, PieChart, Users, Lock, Unlock } from 'lucide-r
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { RegistrationModal } from '@/components/RegistrationModal';
 
 interface TimeLeft {
   days: number;
@@ -16,7 +15,6 @@ interface TimeLeft {
 
 export default function Home() {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, mins: 0, secs: 0 });
-  const [isRegModalOpen, setIsRegModalOpen] = useState(false);
   const [hasRegistered, setHasRegistered] = useState(false);
 
   useEffect(() => {
@@ -87,9 +85,11 @@ export default function Home() {
 
           <div className="flex flex-wrap justify-center gap-4">
             {!hasRegistered ? (
-              <Button onClick={() => setIsRegModalOpen(true)} className="flex items-center gap-2">
-                Register Now <ArrowRight size={20} />
-              </Button>
+              <Link href="/register">
+                <Button className="flex items-center gap-2">
+                  Register Now <ArrowRight size={20} />
+                </Button>
+              </Link>
             ) : (
               <div className="bg-green-500/20 text-green-400 border border-green-500/50 px-6 py-3 rounded-xl font-bold flex items-center gap-2">
                 <ShieldCheck size={20} /> You are Registered!
@@ -147,7 +147,9 @@ export default function Home() {
             <Lock size={64} className="text-gray-600 mb-6" />
             <h3 className="text-2xl font-bold text-gray-400 mb-4">Content Locked</h3>
             <p className="text-gray-500 max-w-md">Register for Aarambh'26 to unlock exclusive event schedules, speaker details, and access to the student community discord.</p>
-            <Button onClick={() => setIsRegModalOpen(true)} className="mt-8">Register to Unlock</Button>
+            <Link href="/register">
+              <Button className="mt-8">Register to Unlock</Button>
+            </Link>
           </Card>
         ) : (
           <motion.div 
@@ -183,18 +185,12 @@ export default function Home() {
               placeholder="Enter your email" 
               className="input-field flex-grow py-3"
               required
+              suppressHydrationWarning
             />
             <Button className="py-3 px-8">Subscribe</Button>
           </form>
         </Card>
       </section>
-
-      {/* Registration Modal */}
-      <RegistrationModal 
-        isOpen={isRegModalOpen} 
-        onClose={() => setIsRegModalOpen(false)} 
-        onSuccess={handleRegistrationSuccess}
-      />
     </main>
   );
 }

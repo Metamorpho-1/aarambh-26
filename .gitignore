@@ -9,27 +9,41 @@
 # next.js
 /.next/
 /out/
+/build
 
 # production
-/build
+/dist
 
 # misc
 .DS_Store
 *.pem
-
-# debug
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+.eslintcache
+.stylelintcache
 
-# local env files
+# env files (NEVER COMMIT)
 .env
-.env*.local
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env*.local
+*.env
+
+# Secrets and Keys
+*.key
+*.cert
+*.pfx
+*.pem
+serviceAccountKey.json
+*-adminsdk-*.json
+firebase-adminsdk.json
+credentials.json
+.cashfree/
 
 # vercel
 .vercel
@@ -41,11 +55,11 @@ next-env.d.ts
 # Firebase
 .firebase/
 *-debug.log
-.runtimeconfig.json
 firebase-debug.log
 firestore-debug.log
 pubsub-debug.log
 ui-debug.log
+.runtimeconfig.json
 
 # IDEs
 .vscode/
@@ -61,4 +75,10 @@ users_test.json
 /scratch/
 /graphify-out/
 tsc-errors.txt
+
+# Antigravity / AI tools
 .gemini/
+.antigravity/
+implementation_plan.md
+task.md
+walkthrough.md
