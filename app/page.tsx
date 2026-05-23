@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { ArrowRight, ShieldCheck, Lock, Unlock, Sparkles, Volume2, VolumeX, HelpCircle, Calendar, Ticket } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Lock, Unlock, Sparkles, Volume2, VolumeX, Calendar, Ticket } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -104,10 +104,17 @@ export default function Home() {
   }, []);
 
   const stickers = [
-    { text: "⚡ BOLD & BEYOND", color: "bg-brand-pink text-brand-cloud", rotation: "-4deg", top: "15%", left: "8%" },
-    { text: "📅 JULY 14-16, 2026", color: "bg-brand-orange text-brand-ink font-extrabold", rotation: "3deg", top: "18%", right: "8%" },
-    { text: "🚀 LIMITLESS", color: "bg-brand-blue text-brand-cloud", rotation: "-2deg", bottom: "16%", left: "10%" },
-    { text: "🔥 FEARLESS BEGINNINGS", color: "bg-brand-cloud text-brand-ink border-2 border-brand-ink", rotation: "5deg", bottom: "14%", right: "12%" },
+    { text: "BOOM!", subtext: "⚡ BOLD & BEYOND", color: "bg-brand-pink text-brand-cloud", top: "15%", left: "6%", starburst: true, rotate: "-6deg" },
+    { text: "POW!", subtext: "📅 JULY 14-16", color: "bg-brand-orange text-brand-ink", top: "18%", right: "6%", starburst: true, rotate: "8deg" },
+    { text: "BANG!", subtext: "🚀 LIMITLESS", color: "bg-brand-blue text-brand-cloud", bottom: "16%", left: "8%", starburst: true, rotate: "-5deg" },
+    { text: "STAGE PASS", subtext: "🔥 FEARLESS", color: "bg-brand-cloud text-brand-ink border-4 border-brand-ink shadow-comic-sm", bottom: "14%", right: "8%", starburst: false, rotate: "6deg" },
+  ];
+
+  const countdownBlocks = [
+    { label: 'Days', valueKey: 'days', bg: 'bg-brand-orange text-brand-ink', rotate: '-rotate-2' },
+    { label: 'Hours', valueKey: 'hours', bg: 'bg-brand-pink text-brand-cloud', rotate: 'rotate-3' },
+    { label: 'Mins', valueKey: 'mins', bg: 'bg-brand-blue text-brand-cloud', rotate: '-rotate-1' },
+    { label: 'Secs', valueKey: 'secs', bg: 'bg-brand-cloud text-brand-ink', rotate: 'rotate-2' },
   ];
 
   const spectrumPanels = [
@@ -115,49 +122,40 @@ export default function Home() {
       id: 0,
       title: "ENERGY ORANGE",
       hex: "#FF9A00",
-      bgGradient: "radial-gradient(circle at center, rgba(255, 154, 0, 0.15) 0%, transparent 70%)",
-      borderClass: "border-brand-orange/30",
-      accentColor: "text-brand-orange",
-      accentBg: "bg-brand-orange",
-      shadowClass: "shadow-solid-orange",
+      accentBg: "bg-brand-orange text-brand-ink",
+      colorClass: "bg-brand-orange",
       subtitle: "ENERGY. ENTHUSIASM. ACTION.",
       description: "Represents the fire inside, the excitement of new friendships, and the energy that powers Aarambh.",
-      tag: "01. EXCITE"
+      tag: "PANEL #1"
     },
     {
       id: 1,
       title: "BOLD PINK",
       hex: "#FF188C",
-      bgGradient: "radial-gradient(circle at center, rgba(255, 24, 140, 0.15) 0%, transparent 70%)",
-      borderClass: "border-brand-pink/30",
-      accentColor: "text-brand-pink",
-      accentBg: "bg-brand-pink",
-      shadowClass: "shadow-solid-pink",
+      accentBg: "bg-brand-pink text-brand-cloud",
+      colorClass: "bg-brand-pink",
       subtitle: "BOLDNESS. CONFIDENCE. EXPRESSION.",
       description: "Reflects the courage to be yourself, speak your truth, and step outside conventions.",
-      tag: "02. EXPR"
+      tag: "PANEL #2"
     },
     {
       id: 2,
       title: "ELECTRIC BLUE",
       hex: "#0D21DD",
-      bgGradient: "radial-gradient(circle at center, rgba(13, 33, 221, 0.15) 0%, transparent 70%)",
-      borderClass: "border-brand-blue/30",
-      accentColor: "text-brand-blue",
-      accentBg: "bg-brand-blue",
-      shadowClass: "shadow-solid-blue",
+      accentBg: "bg-brand-blue text-brand-cloud",
+      colorClass: "bg-brand-blue",
       subtitle: "DEPTH. TRUST. LIMITLESS PATHS.",
       description: "Represents the infinite skies, deep intelligence, and the boundless path that lies ahead.",
-      tag: "03. BEYOND"
+      tag: "PANEL #3"
     }
   ];
 
   return (
-    <main className="flex flex-col items-center overflow-x-hidden relative bg-brand-ink text-brand-cloud">
+    <main className="flex flex-col items-center overflow-x-hidden relative bg-brand-ink text-brand-cloud font-sans">
       {/* Noise/Grain Overlay */}
       <div className="noise-overlay" />
 
-      {/* Hero */}
+      {/* Hero Section */}
       <section className="relative w-full min-h-screen flex flex-col items-center justify-center py-28 px-4 overflow-hidden bg-brand-ink">
         {/* Background Video */}
         <div className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none">
@@ -172,7 +170,7 @@ export default function Home() {
             onLoadedData={() => setIsVideoLoaded(true)}
             className="w-full h-full object-cover scale-100 will-change-transform transition-opacity duration-1000 ease-out"
             style={{ 
-              filter: 'brightness(0.65) contrast(1.15)', 
+              filter: 'brightness(0.6) contrast(1.2) grayscale(0.2)', 
               transform: 'translate3d(0, 0, 0)',
               opacity: isVideoLoaded ? 1 : 0.1,
               imageRendering: '-webkit-optimize-contrast'
@@ -180,150 +178,172 @@ export default function Home() {
           >
             <source src="/teaser.mp4" type="video/mp4" />
           </video>
-          {/* Brand Mesh Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-ink/90 via-brand-ink/40 to-brand-ink pointer-events-none" />
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-pink/10 rounded-full blur-[120px] pointer-events-none" />
-          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-brand-orange/15 rounded-full blur-[150px] pointer-events-none" />
-          {/* Subtle gradient overlay at bottom for depth */}
-          <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-brand-ink to-transparent pointer-events-none" />
+          {/* Stark Comic Gradient Overlays */}
+          <div className="absolute inset-0 bg-gradient-to-t from-brand-ink via-transparent to-brand-ink/80 pointer-events-none" />
+          {/* Halftone shading overlays on background */}
+          <div className="absolute inset-0 bg-halftone-black opacity-20 pointer-events-none" />
         </div>
 
-        {/* Draggable Sticker Wall */}
+        {/* Draggable Pop-Art Stickers */}
         <div className="hidden lg:block absolute inset-0 z-10 pointer-events-none">
           {stickers.map((sticker, idx) => (
             <motion.div
               key={idx}
               drag
               dragConstraints={{ left: -400, right: 400, top: -200, bottom: 200 }}
-              dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
-              whileHover={{ scale: 1.1, zIndex: 50 }}
-              whileDrag={{ scale: 1.15, rotate: "0deg", cursor: "grabbing" }}
+              dragTransition={{ bounceStiffness: 600, bounceDamping: 25 }}
+              whileHover={{ scale: 1.15, zIndex: 50, rotate: "0deg" }}
+              whileDrag={{ scale: 1.2, zIndex: 100, cursor: "grabbing" }}
               style={{
                 top: sticker.top,
                 left: sticker.left,
                 right: sticker.right,
                 bottom: sticker.bottom,
-                rotate: sticker.rotation,
+                rotate: sticker.rotate,
               }}
-              className={`absolute pointer-events-auto cursor-grab px-5 py-2.5 font-display text-xs tracking-widest font-black uppercase rounded-lg border-2 border-brand-ink shadow-solid-ink select-none ${sticker.color}`}
+              className="absolute pointer-events-auto cursor-grab select-none"
             >
-              {sticker.text}
+              {sticker.starburst ? (
+                <div className={`comic-starburst w-36 h-36 border-4 border-brand-ink flex flex-col items-center justify-center text-center p-4 shadow-comic ${sticker.color}`}>
+                  <span className="font-display font-black text-xl leading-none uppercase tracking-tighter drop-shadow-md">
+                    {sticker.text}
+                  </span>
+                  <span className="text-[8px] font-bold tracking-wider mt-1 opacity-90 uppercase">
+                    {sticker.subtext}
+                  </span>
+                </div>
+              ) : (
+                <div className={`px-5 py-3 font-display font-black text-sm uppercase rounded-md ${sticker.color}`}>
+                  {sticker.text}
+                </div>
+              )}
             </motion.div>
           ))}
         </div>
 
+        {/* Hero Content Panel */}
         <motion.div
-          initial={{ opacity: 0, y: 35 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="z-10 text-center max-w-4xl flex flex-col items-center px-4"
         >
-          <span className="page-eyebrow !flex items-center justify-center gap-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] text-brand-orange text-xs tracking-[0.3em] font-black">
+          {/* Comic Book Eyebrow Badge */}
+          <span className="relative z-10 px-4 py-2 border-comic-thin bg-brand-orange text-brand-ink font-display text-xs font-black tracking-[0.25em] uppercase shadow-comic-sm -rotate-2 mb-8">
             UNIVERSITY OF EXCELLENCE PRESENTS
-            <Sparkles size={14} className="text-brand-orange shrink-0 ml-1 animate-pulse" />
+            <Sparkles size={13} className="inline shrink-0 ml-1.5 animate-pulse text-brand-ink" />
           </span>
 
-          {/* Heading Stack / High Contrast Editorial look */}
-          <div className="relative mb-6 select-none">
-            <h1 className="font-display text-6xl sm:text-7xl md:text-8xl lg:text-[7.5rem] font-black uppercase leading-none tracking-tighter text-outline-pink opacity-80 select-none">
+          {/* Comic Styled Heading Stack */}
+          <div className="relative mb-8 select-none p-4 max-w-full">
+            {/* Outline back text */}
+            <h1 className="font-display text-6xl sm:text-7xl md:text-[6.5rem] lg:text-[7.5rem] font-black uppercase leading-none tracking-tighter text-outline-cloud select-none opacity-40">
               BOLD & BEYOND
             </h1>
-            <div className="absolute inset-0 flex items-center justify-center mt-2">
+            {/* Centered Primary Logo */}
+            <div className="absolute inset-0 flex items-center justify-center p-2 mt-2">
               <Image
                 src="/logo.svg"
                 alt="AARAMBH'26"
-                width={580}
-                height={130}
-                className="w-full max-w-sm sm:max-w-md md:max-w-xl lg:max-w-[34rem] h-auto drop-shadow-[0_8px_24px_rgba(255,24,140,0.45)] hover:scale-[1.02] transition-transform duration-300"
+                width={560}
+                height={125}
+                className="w-full max-w-xs sm:max-w-md md:max-w-xl h-auto drop-shadow-[6px_6px_0px_#030404] hover:scale-[1.03] transition-transform duration-300 border-comic p-3 bg-brand-cloud rounded-lg"
                 priority
                 loading="eager"
               />
             </div>
           </div>
 
-          <p className="page-subtitle mx-auto mb-10 max-w-2xl font-medium text-brand-cloud/85 text-sm sm:text-base leading-relaxed tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)] mt-4">
-            The ultimate convergence of technology, culture, and innovation. Embrace fearless self-expression, push boundaries, and step into limitless possibilities.
-          </p>
+          {/* Captions wrapped in a narrative box */}
+          <div className="border-comic bg-brand-cloud text-brand-ink p-6 rounded-lg max-w-2xl shadow-comic -rotate-1 mb-10 bg-halftone-black">
+            <p className="font-display font-black text-sm sm:text-base leading-relaxed tracking-wide uppercase">
+              “THE ULTIMATE CONVERGENCE OF TECHNOLOGY, CULTURE, AND INNOVATION! THREE DAYS OF LIMITLESS ENERGY AND FEARLESS SELF-EXPRESSION!”
+            </p>
+          </div>
 
-          {/* Countdown Clock with solid shadow styling */}
-          <div className="grid grid-cols-4 gap-3 sm:gap-4 mb-10 w-full max-w-md">
-            {(['Days', 'Hours', 'Mins', 'Secs'] as const).map((label) => (
+          {/* Countdown Clock Panel */}
+          <div className="grid grid-cols-4 gap-3 sm:gap-4 mb-12 w-full max-w-md">
+            {countdownBlocks.map((block) => (
               <div
-                key={label}
-                className="p-3 sm:p-4 flex flex-col items-center border-2 border-brand-pink bg-brand-ink/90 shadow-solid-pink rounded-lg"
+                key={block.label}
+                className={`p-3 sm:p-4 border-comic rounded-lg shadow-comic-sm flex flex-col items-center ${block.bg} ${block.rotate} transition-transform hover:scale-105`}
               >
                 <div className="relative h-8 sm:h-10 overflow-hidden flex items-center justify-center w-full">
                   <AnimatePresence mode="popLayout">
                     <motion.span
-                      key={timeLeft[label.toLowerCase() as keyof TimeLeft]}
+                      key={timeLeft[block.valueKey as keyof TimeLeft]}
                       initial={{ y: 24, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       exit={{ y: -24, opacity: 0 }}
                       transition={{ duration: 0.3 }}
-                      className="text-xl sm:text-3xl font-display font-black text-brand-cloud tabular-nums absolute"
+                      className="text-xl sm:text-3xl font-display font-black tabular-nums absolute"
                     >
-                      {String(timeLeft[label.toLowerCase() as keyof TimeLeft]).padStart(2, '0')}
+                      {String(timeLeft[block.valueKey as keyof TimeLeft]).padStart(2, '0')}
                     </motion.span>
                   </AnimatePresence>
                 </div>
-                <span className="text-[9px] sm:text-xs text-brand-pink font-bold uppercase tracking-widest mt-1">
-                  {label}
+                <span className="text-[10px] font-black uppercase tracking-widest mt-1 opacity-80">
+                  {block.label}
                 </span>
               </div>
             ))}
           </div>
 
           {/* Action CTAs */}
-          <div className="flex flex-wrap justify-center gap-4 z-20">
+          <div className="flex flex-wrap justify-center gap-6 z-20 relative">
             {!hasRegistered ? (
-              <Link href="/register">
-                <button className="relative group overflow-hidden rounded-full border-2 border-brand-ink py-3 px-8 font-display font-extrabold text-sm uppercase tracking-wider text-brand-ink bg-brand-orange hover:bg-brand-pink transition-all duration-300 hover:scale-105 active:scale-95 shadow-solid-pink hover:shadow-solid-blue">
-                  <span className="relative z-10 text-brand-ink transition-colors group-hover:text-brand-cloud flex items-center gap-2">
-                    Register Now <ArrowRight size={18} />
-                  </span>
-                </button>
-              </Link>
+              <div className="relative">
+                {/* Speech Bubble floating callout */}
+                <div className="absolute -top-16 left-1/2 -translate-x-1/2 comic-bubble px-4 py-2 font-display text-xs font-black uppercase whitespace-nowrap animate-bounce z-30">
+                  JOIN THE SQUAD NOW! ⚡
+                </div>
+                
+                <Link href="/register">
+                  <button className="comic-interactive border-comic shadow-comic py-3.5 px-8 font-display font-black text-sm uppercase tracking-wider text-brand-ink bg-brand-orange hover:bg-brand-pink hover:text-brand-cloud rounded-lg">
+                    REGISTER NOW <ArrowRight className="inline shrink-0 ml-1.5" size={18} />
+                  </button>
+                </Link>
+              </div>
             ) : (
-              <div className="bg-brand-blue/30 text-brand-cloud border-2 border-brand-blue px-8 py-3 rounded-full font-bold flex items-center gap-2 shadow-solid-blue">
-                <ShieldCheck size={20} className="text-brand-orange animate-bounce" /> You are Registered!
+              <div className="bg-brand-blue text-brand-cloud border-comic shadow-comic px-8 py-3.5 rounded-lg font-display font-black text-sm uppercase tracking-wider flex items-center gap-2">
+                <ShieldCheck size={20} className="text-brand-orange animate-bounce" /> YOU ARE ENROLLED!
               </div>
             )}
 
-            <Button
-              variant="glass"
-              className="flex items-center gap-2 text-sm px-8 border-2 border-brand-pink/50 hover:border-brand-pink transition-all bg-brand-ink/65 backdrop-blur-md shadow-md rounded-full"
+            <button
               onClick={handleVolumeToggle}
+              className="comic-interactive border-comic shadow-comic bg-brand-cloud text-brand-ink px-6 py-3.5 font-display font-black text-xs uppercase tracking-widest rounded-lg flex items-center gap-2"
             >
               {isMuted ? <VolumeX size={18} className="text-brand-pink animate-pulse" /> : <Volume2 size={18} className="text-brand-orange animate-bounce" />}
-              <span className="font-display font-bold uppercase tracking-widest text-xs">{isMuted ? "Unmute Video" : "Mute Sound"}</span>
-            </Button>
+              <span>{isMuted ? "UNMUTE TRAILER" : "MUTE SOUND"}</span>
+            </button>
           </div>
         </motion.div>
 
-        {/* Credit tag styled as sticker */}
-        <div className="absolute bottom-6 right-6 z-20 px-4 py-1.5 rounded-md bg-brand-cloud border-2 border-brand-ink text-[10px] text-brand-ink font-black tracking-widest uppercase shadow-solid-pink select-none pointer-events-none">
-          Credit: Vaibhav Khandelwal
+        {/* Narrative Box style Credit tag */}
+        <div className="absolute bottom-6 right-6 z-20 px-4 py-2 bg-brand-cloud border-comic-thin text-xs text-brand-ink font-black tracking-widest uppercase shadow-comic-sm rotate-2 select-none pointer-events-none">
+          CREDIT: VAIBHAV KHANDELWAL
         </div>
       </section>
 
       {/* Torn paper visual separation */}
       <TornPaperDivider color="fill-brand-cloud" />
 
-      {/* Brand strip with continuous marquee */}
-      <section className="w-full py-4 border-y-2 border-brand-ink bg-brand-cloud text-brand-ink overflow-hidden z-10">
+      {/* Comic styled strip/marquee */}
+      <section className="w-full py-4 border-y-4 border-brand-ink bg-brand-cloud text-brand-ink overflow-hidden z-10">
         <div className="w-full flex whitespace-nowrap overflow-hidden">
           <motion.div
             variants={marqueeVariants}
             animate="animate"
-            className="flex gap-16 font-display font-black text-sm sm:text-base uppercase tracking-widest select-none"
+            className="flex gap-16 font-display font-black text-base sm:text-lg uppercase tracking-wider select-none"
           >
             {[...Array(4)].map((_, i) => (
               <React.Fragment key={i}>
-                <span className="text-brand-pink">⚡ BOLD & BEYOND</span>
-                <span className="text-brand-blue">🌟 LIMITLESS</span>
-                <span className="text-brand-orange">🔥 ENERGY</span>
-                <span className="text-brand-ink">🎨 EXPERIMENTAL</span>
-                <span className="text-brand-pink">💥 FEARLESS BEGINNINGS</span>
+                <span className="text-brand-pink">💥 BOLD & BEYOND!</span>
+                <span className="text-brand-blue">🌟 LIMITLESS!</span>
+                <span className="text-brand-orange">⚡ ENERGY!</span>
+                <span className="text-brand-ink">🎨 CRASH!</span>
+                <span className="text-brand-pink">🔥 FEARLESS!</span>
               </React.Fragment>
             ))}
           </motion.div>
@@ -333,18 +353,20 @@ export default function Home() {
       {/* Torn paper visual separation */}
       <TornPaperDivider color="fill-brand-cloud" flip={true} />
 
-      {/* Theme Spectrum Accordion - Custom Brand Palette Interaction */}
+      {/* Spectrum Panels (Comic Book Strip Columns) */}
       <section className="py-24 px-6 w-full max-w-7xl relative z-10 flex flex-col items-center">
-        <span className="page-eyebrow text-center text-brand-orange tracking-[0.2em] font-black">THE BRAND PALETTE</span>
+        <span className="px-4 py-1.5 border-comic-thin bg-brand-pink text-brand-cloud font-display text-xs font-black tracking-widest uppercase rotate-2 mb-4">
+          SPECTRUM STORY
+        </span>
         <h2 className="text-center font-display text-4xl md:text-5xl font-black uppercase tracking-tight text-brand-cloud mb-4">
-          SPECTRUM OF <span className="text-outline-pink">BEYOND</span>
+          THE SPECTRUM PANELS
         </h2>
         <p className="text-center text-brand-cloud/60 max-w-xl mb-16 text-sm">
-          Aarambh&apos;26 is defined by its colors. Hover or click on a panel to explore how each shade embodies the spirit of going Bold & Beyond.
+          Hover over each comic panel block to trigger halftone coloring and reveal the narrative behind the colors.
         </p>
 
-        {/* Panel Container */}
-        <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 lg:h-[450px]">
+        {/* 3 Comic Column grid */}
+        <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
           {spectrumPanels.map((panel) => {
             const isHovered = activeSpectrum === panel.id;
             return (
@@ -352,60 +374,66 @@ export default function Home() {
                 key={panel.id}
                 onMouseEnter={() => setActiveSpectrum(panel.id)}
                 onMouseLeave={() => setActiveSpectrum(null)}
-                className={`relative flex flex-col justify-between p-8 border-2 ${panel.borderClass} bg-brand-ink/90 rounded-2xl overflow-hidden transition-all duration-500 ease-out cursor-pointer ${panel.shadowClass} ${
-                  activeSpectrum !== null && !isHovered ? 'opacity-40 scale-[0.98]' : 'scale-100'
+                className={`relative flex flex-col justify-between p-8 border-comic bg-brand-cloud text-brand-ink rounded-xl overflow-hidden transition-all duration-300 cursor-pointer shadow-comic ${
+                  isHovered ? 'scale-105 bg-brand-cloud' : 'hover:scale-[1.02]'
                 }`}
                 style={{
-                  background: isHovered ? panel.bgGradient : 'rgba(3, 4, 4, 0.85)',
-                  transform: isHovered ? 'translateY(-6px)' : 'none',
+                  transform: isHovered ? 'translate(-4px, -4px)' : 'none',
+                  boxShadow: isHovered ? '12px 12px 0px 0px var(--color-brand-ink)' : '8px 8px 0px 0px var(--color-brand-ink)'
                 }}
               >
-                {/* Background design accents (halftone details on hover) */}
+                {/* Halftone backing (activates on hover) */}
                 <div 
-                  className={`absolute inset-0 bg-halftone opacity-10 pointer-events-none transition-opacity duration-300 ${
-                    isHovered ? 'opacity-30' : 'opacity-0'
+                  className={`absolute inset-0 bg-halftone-black opacity-10 pointer-events-none transition-opacity duration-300 ${
+                    isHovered ? 'opacity-25' : 'opacity-0'
                   }`} 
                 />
 
-                {/* Top bar info */}
+                {/* Panel tag */}
                 <div className="flex justify-between items-center z-10">
-                  <span className={`text-xs font-black uppercase px-2.5 py-1 ${panel.accentBg} text-brand-ink rounded`}>
+                  <span className={`text-[10px] font-black uppercase px-2.5 py-1 border-comic-thin rounded ${panel.accentBg}`}>
                     {panel.tag}
                   </span>
-                  <span className="text-xs font-mono text-brand-cloud/40 uppercase tracking-widest">
+                  <span className="text-[10px] font-mono text-brand-ink/40 uppercase tracking-widest">
                     {panel.hex}
                   </span>
                 </div>
 
-                {/* Main panel text content */}
-                <div className="mt-16 sm:mt-24 lg:mt-0 z-10 space-y-4">
-                  <h3 className={`font-display text-2xl md:text-3xl font-black uppercase tracking-tight ${panel.accentColor}`}>
+                {/* Comic illustration area (Stark block color representer) */}
+                <div className="my-8 h-28 border-comic bg-brand-ink flex items-center justify-center overflow-hidden relative rounded-lg">
+                  <div className={`absolute inset-0 ${panel.colorClass} opacity-80`} />
+                  <div className="absolute inset-0 bg-halftone-cloud opacity-35" />
+                  <span className="relative z-10 font-display font-black text-2xl text-brand-cloud uppercase tracking-tighter text-outline-ink drop-shadow-md">
+                    {panel.title.split(' ')[0]}
+                  </span>
+                </div>
+
+                {/* Content */}
+                <div className="z-10 space-y-3">
+                  <h3 className="font-display text-2xl font-black uppercase leading-none tracking-tight">
                     {panel.title}
                   </h3>
                   
                   <div className="space-y-2">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-brand-cloud">
+                    <h4 className="text-[11px] font-black uppercase tracking-widest text-brand-pink">
                       {panel.subtitle}
                     </h4>
-                    <p className="text-xs sm:text-sm text-brand-cloud/60 leading-relaxed font-medium">
+                    <p className="text-xs text-brand-ink/80 leading-relaxed font-bold">
                       {panel.description}
                     </p>
                   </div>
                 </div>
 
-                {/* Color Block Bar at bottom */}
+                {/* Expand indicator */}
                 <div className="mt-8 flex items-center justify-between z-10">
-                  <div className="flex gap-1.5">
-                    <div className="w-4 h-4 rounded-full bg-brand-orange" />
-                    <div className="w-4 h-4 rounded-full bg-brand-pink" />
-                    <div className="w-4 h-4 rounded-full bg-brand-blue" />
+                  <div className="flex gap-1">
+                    <div className="w-3.5 h-3.5 rounded-full border-comic-thin bg-brand-orange" />
+                    <div className="w-3.5 h-3.5 rounded-full border-comic-thin bg-brand-pink" />
+                    <div className="w-3.5 h-3.5 rounded-full border-comic-thin bg-brand-blue" />
                   </div>
-                  <motion.div
-                    animate={isHovered ? { x: 5 } : { x: 0 }}
-                    className={`flex items-center gap-1 text-xs font-black uppercase ${panel.accentColor}`}
-                  >
-                    Explore <ArrowRight size={14} />
-                  </motion.div>
+                  <div className="flex items-center gap-1 text-xs font-black uppercase">
+                    READ PANEL <ArrowRight size={13} />
+                  </div>
                 </div>
               </div>
             );
@@ -413,40 +441,42 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Embed the custom styled About component */}
-      <section className="w-full z-10">
+      {/* About Section wrapper */}
+      <section className="w-full z-10 bg-brand-ink">
         <AboutSection />
       </section>
 
-      {/* Exclusive student gateway with poster board layout */}
+      {/* Exclusive student gateway panels */}
       <section className="py-24 px-6 w-full max-w-7xl relative z-10 flex flex-col items-center">
-        <span className="page-eyebrow text-center text-brand-pink tracking-[0.2em] font-black">EXHIBIT</span>
+        <span className="px-4 py-1.5 border-comic-thin bg-brand-blue text-brand-cloud font-display text-xs font-black tracking-widest uppercase -rotate-2 mb-4">
+          PORTAL PASS
+        </span>
         <h2 className="text-center font-display text-4xl md:text-5xl font-black uppercase tracking-tight text-brand-cloud mb-4">
-          STUDENT GATEWAY
+          THE STUDENT GATEWAY
         </h2>
         <p className="text-center text-brand-cloud/60 max-w-xl mb-16 text-sm">
-          Access your personal scheduler, speaker keynotes, and peer cohorts. Complete your registration to unlock the gateway.
+          Unlock your schedules and cohorts. Join your assigned teams once registration validation completes.
         </p>
 
         {!hasRegistered ? (
-          <div className="w-full max-w-4xl border-2 border-brand-pink bg-brand-ink bg-halftone-pink p-12 text-center flex flex-col items-center rounded-2xl shadow-solid-pink relative overflow-hidden">
-            <div className="absolute top-4 right-4 text-xs font-mono font-black text-brand-pink/50">
-              STATUS: ENCRYPTED
+          <div className="w-full max-w-4xl border-comic bg-brand-cloud text-brand-ink p-12 text-center flex flex-col items-center rounded-xl shadow-comic bg-halftone-black relative overflow-hidden">
+            <div className="absolute top-4 right-4 text-[10px] font-mono font-black text-brand-ink/50 bg-brand-pink/15 px-2 py-0.5 border-comic-thin rounded">
+              SYSTEM: CRYPTO-LOCKED
             </div>
             
-            {/* Padlock visual element */}
-            <div className="relative p-6 mb-6 bg-brand-pink/10 border-2 border-brand-pink/30 rounded-full text-brand-pink animate-pulse">
-              <Lock size={44} />
+            {/* Padlock icon in a comic badge */}
+            <div className="relative p-6 mb-6 bg-brand-pink border-comic shadow-comic-sm rounded-lg text-brand-cloud animate-pulse rotate-3">
+              <Lock size={40} />
             </div>
 
-            <h3 className="text-2xl font-display font-black text-brand-cloud mb-2 uppercase tracking-wide">PORTAL LOCKED</h3>
-            <p className="text-brand-cloud/55 max-w-md text-sm mb-8 leading-relaxed font-medium">
-              You must register to gain entry to the Aarambh &apos;26 student community dashboard, timetables, and orientation materials.
+            <h3 className="text-2xl font-display font-black mb-2 uppercase tracking-wide">GATEWAY LOCKED</h3>
+            <p className="text-brand-ink/75 max-w-md text-xs sm:text-sm mb-8 leading-relaxed font-bold">
+              KAPOW! THIS AREA IS RESTRICTED. COMPLETE YOUR REGISTRATION ENROLLMENT TO ACTIVATE YOUR ACCESS KEYS.
             </p>
             
             <Link href="/register">
-              <button className="px-8 py-3.5 bg-brand-pink border-2 border-brand-ink text-brand-cloud font-display font-black text-xs uppercase tracking-wider hover:bg-brand-orange hover:text-brand-ink transition-all duration-300 shadow-solid-cloud hover:shadow-solid-ink rounded-full">
-                Register to Unlock Portal
+              <button className="comic-interactive border-comic shadow-comic px-8 py-3.5 bg-brand-pink text-brand-cloud font-display font-black text-xs uppercase tracking-wider rounded-lg">
+                ACTIVATE ACCOUNT KEYS
               </button>
             </Link>
           </div>
@@ -457,46 +487,46 @@ export default function Home() {
             viewport={{ once: true }}
             className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl"
           >
-            {/* Discord Community Card */}
-            <div className="p-8 border-2 border-brand-blue bg-brand-ink/90 rounded-2xl shadow-solid-blue hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+            {/* Comic panel 1 */}
+            <div className="p-8 border-comic bg-brand-cloud text-brand-ink rounded-xl shadow-comic hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
               <div>
                 <div className="flex justify-between items-center mb-6">
-                  <span className="text-[10px] font-black tracking-widest uppercase bg-brand-blue text-brand-cloud px-2 py-0.5 rounded">
-                    COMMUNITY
+                  <span className="text-[10px] font-black tracking-widest uppercase bg-brand-blue text-brand-cloud px-3 py-1 border-comic-thin rounded">
+                    SQUAD CHAT
                   </span>
                   <Unlock className="text-brand-blue" size={18} />
                 </div>
-                <h3 className="text-2xl font-display font-black text-brand-cloud mb-3 uppercase tracking-tight">
-                  Student Cohorts
+                <h3 className="text-2xl font-display font-black mb-3 uppercase tracking-tight">
+                  Join Peer Cohort
                 </h3>
-                <p className="text-brand-cloud/60 text-xs sm:text-sm leading-relaxed font-medium mb-6">
-                  Join the official Aarambh Discord server to meet other freshers, coordinate with seniors, and check live announcements.
+                <p className="text-brand-ink/70 text-xs sm:text-sm leading-relaxed font-bold mb-6">
+                  Connect with your assignees in the official Aarambh chat server. Network with seniors and organize squad taskboards!
                 </p>
               </div>
-              <button className="w-full py-3.5 bg-brand-blue border-2 border-brand-ink text-brand-cloud font-display font-black text-xs uppercase tracking-widest hover:opacity-90 hover:scale-[1.01] transition-all rounded-lg">
-                Join Discord Server
+              <button className="w-full py-3.5 bg-brand-blue border-comic shadow-comic-sm text-brand-cloud font-display font-black text-xs uppercase tracking-widest rounded-lg comic-interactive">
+                JOIN DISCORD SQUAD
               </button>
             </div>
 
-            {/* Itinerary Schedule Card */}
-            <div className="p-8 border-2 border-brand-orange bg-brand-ink/90 rounded-2xl shadow-solid-orange hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+            {/* Comic panel 2 */}
+            <div className="p-8 border-comic bg-brand-cloud text-brand-ink rounded-xl shadow-comic hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
               <div>
                 <div className="flex justify-between items-center mb-6">
-                  <span className="text-[10px] font-black tracking-widest uppercase bg-brand-orange text-brand-ink px-2 py-0.5 rounded">
-                    AGENDA
+                  <span className="text-[10px] font-black tracking-widest uppercase bg-brand-orange text-brand-ink px-3 py-1 border-comic-thin rounded">
+                    ITINERARY
                   </span>
                   <Unlock className="text-brand-orange" size={18} />
                 </div>
-                <h3 className="text-2xl font-display font-black text-brand-cloud mb-3 uppercase tracking-tight">
-                  Personal Schedule
+                <h3 className="text-2xl font-display font-black mb-3 uppercase tracking-tight">
+                  TIMETABLE FLOW
                 </h3>
-                <p className="text-brand-cloud/60 text-xs sm:text-sm leading-relaxed font-medium mb-6">
-                  View your cohort-specific timetable, room mappings, mentor assignments, and register for workshops.
+                <p className="text-brand-ink/70 text-xs sm:text-sm leading-relaxed font-bold mb-6">
+                  View scheduled lecture rooms, project workshop assignments, and cultural evening timelines.
                 </p>
               </div>
               <Link href="/schedule">
-                <button className="w-full py-3.5 bg-brand-orange border-2 border-brand-ink text-brand-ink font-display font-black text-xs uppercase tracking-widest hover:opacity-90 hover:scale-[1.01] transition-all rounded-lg">
-                  View Schedule Flow
+                <button className="w-full py-3.5 bg-brand-orange border-comic shadow-comic-sm text-brand-ink font-display font-black text-xs uppercase tracking-widest rounded-lg comic-interactive">
+                  LAUNCH SCHEDULE SHEET
                 </button>
               </Link>
             </div>
@@ -504,32 +534,36 @@ export default function Home() {
         )}
       </section>
 
-      {/* Newsletter signup styled as a printed poster */}
+      {/* Comic Book Ad Banner Style Newsletter */}
       <section className="py-24 px-6 w-full max-w-5xl pb-32 relative z-10">
-        <div className="border-2 border-brand-cloud bg-brand-ink shadow-solid-pink bg-halftone-pink p-8 sm:p-12 md:p-16 rounded-2xl text-center relative overflow-hidden">
-          {/* Neon backlighting blur */}
-          <div className="absolute -right-24 -top-24 w-64 h-64 bg-brand-pink/20 rounded-full blur-[100px]" />
-          
-          <span className="page-eyebrow text-brand-orange font-black">BULLETIN</span>
-          <h2 className="text-3xl md:text-5xl font-display font-black uppercase mb-4 tracking-tight text-brand-cloud">
-            STAY UPDATED
+        <div className="border-comic bg-brand-orange text-brand-ink shadow-comic-lg bg-halftone-black p-8 sm:p-12 md:p-16 rounded-xl text-center relative overflow-hidden">
+          {/* Action starburst backing design */}
+          <div className="absolute top-2 left-2 w-16 h-16 border-comic-thin bg-brand-pink text-brand-cloud font-display font-black text-[10px] uppercase tracking-tighter flex items-center justify-center rotate-[-12deg] shadow-comic-sm">
+            NEWS!
+          </div>
+
+          <span className="relative z-10 px-3 py-1 bg-brand-ink text-brand-cloud font-display text-[10px] font-black uppercase tracking-widest">
+            AARAMBH DISPATCH
+          </span>
+          <h2 className="text-3xl md:text-5xl font-display font-black uppercase mb-4 tracking-tight mt-6">
+            SUBSCRIBE & STAY TUNED!
           </h2>
-          <p className="text-brand-cloud/65 text-xs sm:text-sm mb-10 max-w-md mx-auto leading-relaxed font-medium">
-            Join the broadcast network. Receive instant ping alerts regarding speaker profiles, event slots, and registration deadlines.
+          <p className="text-brand-ink/80 text-xs sm:text-sm mb-10 max-w-md mx-auto leading-relaxed font-bold uppercase">
+            GET THE OFFICIAL BROADCASTS DELIVERED TO YOUR INBOX. ANNOUNCEMENTS, KEYNOTE SCHEDULES, AND VENUE ASSIGNMENTS!
           </p>
           
           <form className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto relative z-10">
             <input
               type="email"
-              placeholder="YOUR.NAME@EMAIL.COM"
-              className="bg-brand-ink/90 border-2 border-brand-cloud rounded-lg px-4 py-3 text-brand-cloud placeholder:text-brand-cloud/30 font-mono text-sm focus:outline-none focus:border-brand-pink transition-colors flex-grow shadow-inner uppercase tracking-wider"
+              placeholder="ENTER.YOUR.EMAIL@HERE.COM"
+              className="bg-brand-cloud border-comic text-brand-ink placeholder:text-brand-ink/40 font-mono text-sm font-bold focus:outline-none focus:bg-white transition-colors flex-grow shadow-inner uppercase tracking-wider p-3 rounded-lg"
               required
             />
             <button
               type="submit"
-              className="py-3 px-8 bg-brand-cloud border-2 border-brand-ink text-brand-ink font-display font-black text-xs uppercase tracking-widest hover:bg-brand-pink hover:text-brand-cloud hover:border-brand-ink transition-colors shadow-solid-ink rounded-lg"
+              className="py-3.5 px-8 bg-brand-ink text-brand-cloud font-display font-black text-xs uppercase tracking-widest rounded-lg comic-interactive border-2 border-brand-cloud shadow-comic-sm"
             >
-              Subscribe
+              SUBSCRIBE NOW
             </button>
           </form>
         </div>
