@@ -234,6 +234,16 @@ export default function DutyManagement() {
           status: 'upcoming',
           createdAt: serverTimestamp()
         });
+
+        // Add real-time notification
+        const notifRef = doc(collection(db, 'notifications'));
+        batch.set(notifRef, {
+          volunteerId: vol.id,
+          title: 'New Duty Assigned',
+          message: `You have been assigned to "${selectedVenue}" on ${formatDateFriendly(selectedDate)} from ${formatTime12hr(timeFrom)} to ${formatTime12hr(timeTo)}.`,
+          read: false,
+          timestamp: serverTimestamp()
+        });
       });
 
       await batch.commit();
@@ -321,6 +331,15 @@ export default function DutyManagement() {
         notes: editNotes.trim()
       });
 
+      // Add real-time notification
+      await addDoc(collection(db, 'notifications'), {
+        volunteerId: editingDuty.volunteerId,
+        title: 'Duty Assignment Updated',
+        message: `Your duty assignment for ${formatDateFriendly(editDate)} at "${editVenue}" has been updated. Status: ${editStatus}.`,
+        read: false,
+        timestamp: serverTimestamp()
+      });
+
       await logAdminAction(
         'EDIT_DUTY_ASSIGNMENT', 
         `dutyAssignments/${editingDuty.id}`, 
@@ -338,6 +357,16 @@ export default function DutyManagement() {
 
     try {
       await deleteDoc(doc(db, 'dutyAssignments', deletingDuty.id));
+
+      // Add real-time notification
+      await addDoc(collection(db, 'notifications'), {
+        volunteerId: deletingDuty.volunteerId,
+        title: 'Duty Assignment Removed',
+        message: `Your duty assignment on ${formatDateFriendly(deletingDuty.dutyDate)} at "${deletingDuty.venue}" has been removed.`,
+        read: false,
+        timestamp: serverTimestamp()
+      });
+
       await logAdminAction(
         'DELETE_DUTY_ASSIGNMENT', 
         `dutyAssignments/${deletingDuty.id}`, 
@@ -411,9 +440,18 @@ export default function DutyManagement() {
   return (
     <div className="space-y-10 select-none font-adminBody">
       {/* Title Header */}
-      <div>
-        <h1 className="font-adminHeading text-3xl font-black uppercase tracking-tight text-brand-ink mb-1.5">Duty Management</h1>
-        <p className="text-admin-muted font-bold text-xs uppercase tracking-wider">Manage volunteer duty assignments for AARAMBH’26</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="font-adminHeading text-3xl font-black uppercase tracking-tight text-brand-ink mb-1.5">Duty Management</h1>
+          <p className="text-admin-muted font-bold text-xs uppercase tracking-wider">Manage volunteer duty assignments for AARAMBH’26</p>
+        </div>
+        <a 
+          href="/credentials.txt" 
+          download="credentials.txt"
+          className="bg-brand-blue hover:bg-secondary-dark text-white font-black py-3 px-6 border-2 border-brand-ink shadow-[3px_3px_0px_0px_#030404] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_#030404] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all duration-100 flex items-center gap-2 cursor-pointer rounded-md text-xs uppercase tracking-wider"
+        >
+          Download Credentials
+        </a>
       </div>
 
       {/* ==================================================================== */}

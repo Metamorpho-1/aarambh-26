@@ -138,6 +138,13 @@ const CustomLoaderIcon = ({ className = '', size = 18 }: { className?: string; s
 // LOGIN VIEW PAGE
 // ============================================================================
 
+async function sha256(message: string) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -159,30 +166,95 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const uid = userCredential.user.uid;
+    const inputClean = email.trim();
+    const isUid = /^AAR-/i.test(inputClean);
 
-      const roleDoc = await getDoc(doc(db, 'roles', uid));
-      if (roleDoc.exists()) {
-        const role = roleDoc.data().role;
-        if (role === 'admin') {
-          router.push('/admin');
-        } else if (role === 'scanner') {
-          router.push('/scanner');
-        } else if (role === 'feedback') {
-          router.push('/feedback');
-        } else {
-          setError('Access denied: Invalid account role.');
-          await auth.signOut();
+    try {
+      if (isUid) {
+        // UID Login Fallback
+        const { collection, query, where, getDocs } = await import('firebase/firestore');
+        const q = query(collection(db, 'volunteers'), where('uid', '==', inputClean.toUpperCase()));
+        const snap = await getDocs(q);
+        
+        if (!snap.empty) {
+          const volDoc = snap.docs[0];
+          const volData = volDoc.data();
+          const hashedInput = await sha256(password);
+          
+          if (volData.passwordHash === hashedInput) {
+            // Save session
+            const sessionData = {
+              uid: volDoc.id,
+              email: volData.email,
+              role: volData.role === 'Team Leader' ? 'team_leader' : 'volunteer',
+              name: volData.name,
+              volUid: volData.uid
+            };
+            localStorage.setItem('aarambh_session', JSON.stringify(sessionData));
+            router.push('/volunteer');
+            return;
+          }
         }
+        setError('Invalid UID or password.');
       } else {
-        setError('Access denied: Unauthorized account.');
-        await auth.signOut();
+        // Standard Email Login with Firestore Fallback
+        try {
+          const userCredential = await signInWithEmailAndPassword(auth, inputClean, password);
+          const uid = userCredential.user.uid;
+          
+          // Clear any stale local storage session since we are using Firebase Auth
+          localStorage.removeItem('aarambh_session');
+
+          const roleDoc = await getDoc(doc(db, 'roles', uid));
+          if (roleDoc.exists()) {
+            const role = roleDoc.data().role;
+            if (role === 'admin') {
+              router.push('/admin');
+            } else if (role === 'scanner') {
+              router.push('/scanner');
+            } else if (role === 'feedback') {
+              router.push('/feedback');
+            } else if (role === 'volunteer' || role === 'team_leader') {
+              router.push('/volunteer');
+            } else {
+              setError('Access denied: Invalid account role.');
+              await auth.signOut();
+            }
+          } else {
+            setError('Access denied: Unauthorized account.');
+            await auth.signOut();
+          }
+        } catch (authErr) {
+          // If auth sign-in fails, try checking Firestore credentials (fallback for rate-limited sign-ups)
+          const { collection, query, where, getDocs } = await import('firebase/firestore');
+          const q = query(collection(db, 'volunteers'), where('email', '==', inputClean.toLowerCase()));
+          const snap = await getDocs(q);
+          
+          if (!snap.empty) {
+            const volDoc = snap.docs[0];
+            const volData = volDoc.data();
+            const hashedInput = await sha256(password);
+            
+            if (volData.passwordHash === hashedInput) {
+              const sessionData = {
+                uid: volDoc.id,
+                email: volData.email,
+                role: volData.role === 'Team Leader' ? 'team_leader' : 'volunteer',
+                name: volData.name,
+                volUid: volData.uid
+              };
+              localStorage.setItem('aarambh_session', JSON.stringify(sessionData));
+              router.push('/volunteer');
+              return;
+            }
+          }
+          console.error('Login error:', authErr);
+          setError('Invalid email or password.');
+        }
       }
     } catch (err: any) {
-      console.error('Login error:', err);
-      setError('Invalid email or password.');
+      console.error('Login system error:', err);
+      setError('An error occurred during sign in.');
     } finally {
       setLoading(false);
     }
