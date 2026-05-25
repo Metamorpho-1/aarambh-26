@@ -189,15 +189,15 @@ async function main() {
       const code = teamMap[team] || 'VOL';
       const seqUid = `AAR-${code}-${String(teamCounts[team]).padStart(3, '0')}`;
       
-      // Generate email (firstname.lastname@aarambh26.in)
+      // Generate email (firstname.lastname@aarambh.jklu.edu.in)
       const nameParts = name.toLowerCase().replace(/[^a-z\s]/g, '').trim().split(/\s+/);
       let baseEmail = nameParts.join('.');
       if (nameParts.length === 1) baseEmail = `${nameParts[0]}.volunteer`;
       
-      let email = `${baseEmail}@aarambh26.in`;
+      let email = `${baseEmail}@aarambh.jklu.edu.in`;
       if (emailCounts[email]) {
         emailCounts[email]++;
-        email = `${baseEmail}${emailCounts[email]}@aarambh26.in`;
+        email = `${baseEmail}${emailCounts[email]}@aarambh.jklu.edu.in`;
       } else {
         emailCounts[email] = 1;
       }

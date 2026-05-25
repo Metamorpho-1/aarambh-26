@@ -95,3 +95,6 @@ walkthrough.md
 
 # Large media files
 /public/teaser.mp4
+
+# Generated Credentials File
+/public/credentials.txt
