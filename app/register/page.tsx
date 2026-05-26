@@ -134,17 +134,34 @@ function RegisterContent() {
   };
 
   // Section validation logic
+  const studentStarted = 
+    formData.name.trim() !== '' ||
+    formData.registrationNumber.trim() !== '' ||
+    formData.mobile.trim() !== '' ||
+    formData.email.trim() !== '';
+
   const isStudentValid = 
     formData.name.trim() !== '' &&
     formData.registrationNumber.trim() !== '' &&
     formData.mobile.trim() !== '' &&
     formData.email.trim() !== '';
 
+  const parentsStarted = 
+    formData.fatherName.trim() !== '' ||
+    formData.fatherMobile.trim() !== '' ||
+    formData.fatherEmail.trim() !== '' ||
+    formData.motherName.trim() !== '' ||
+    formData.motherMobile.trim() !== '' ||
+    formData.motherEmail.trim() !== '';
+
   const isParentsValid = 
     formData.fatherName.trim() !== '' &&
     formData.fatherMobile.trim() !== '' &&
     formData.motherName.trim() !== '' &&
     formData.motherMobile.trim() !== '';
+
+  const isAddressValid = 
+    formData.address.trim().length >= 10;
 
   if (isSuccess) {
     return (
@@ -307,9 +324,13 @@ function RegisterContent() {
                         <span>Fulfilled</span>
                       </span>
                     </span>
-                  ) : (
+                  ) : studentStarted ? (
                     <span className="px-3 py-1 border-2 border-brand-ink bg-brand-pink text-brand-cloud font-display text-[10px] font-black uppercase rounded shadow-comic-sm -rotate-2">
                       IN PROGRESS
+                    </span>
+                  ) : (
+                    <span className="px-3 py-1 border-2 border-brand-ink bg-brand-blue text-brand-cloud font-display text-[10px] font-black uppercase rounded shadow-comic-sm -rotate-2">
+                      ACTIVE
                     </span>
                   )}
                 </div>
@@ -382,6 +403,10 @@ function RegisterContent() {
                           <span>Requirement</span>
                           <span>Fulfilled</span>
                         </span>
+                      </span>
+                    ) : parentsStarted ? (
+                      <span className="px-3 py-1 border-2 border-brand-ink bg-brand-pink text-brand-cloud font-display text-[10px] font-black uppercase rounded shadow-comic-sm -rotate-2">
+                        IN PROGRESS
                       </span>
                     ) : (
                       <span className="px-3 py-1 border-2 border-brand-ink bg-brand-blue text-brand-cloud font-display text-[10px] font-black uppercase rounded shadow-comic-sm -rotate-2">
@@ -493,9 +518,23 @@ function RegisterContent() {
                     <h2 className="text-2xl font-display font-black uppercase tracking-wider text-brand-ink">Address & Verification</h2>
                   </div>
                   {isStudentValid && isParentsValid ? (
-                    <span className="px-3 py-1 border-2 border-brand-ink bg-brand-orange text-brand-ink font-display text-[10px] font-black uppercase rounded shadow-comic-sm -rotate-2 animate-pulse">
-                      ACTIVE PASS
-                    </span>
+                    isAddressValid ? (
+                      <span className="flex items-center gap-1.5 px-3 py-1 border-2 border-brand-ink bg-green-400 text-brand-ink font-display text-[9px] font-black uppercase rounded shadow-comic-sm rotate-3">
+                        <Check size={12} className="stroke-[4] shrink-0" />
+                        <span className="flex flex-col text-left leading-tight">
+                          <span>Requirement</span>
+                          <span>Fulfilled</span>
+                        </span>
+                      </span>
+                    ) : formData.address.trim().length > 0 ? (
+                      <span className="px-3 py-1 border-2 border-brand-ink bg-brand-pink text-brand-cloud font-display text-[10px] font-black uppercase rounded shadow-comic-sm -rotate-2">
+                        IN PROGRESS
+                      </span>
+                    ) : (
+                      <span className="px-3 py-1 border-2 border-brand-ink bg-brand-blue text-brand-cloud font-display text-[10px] font-black uppercase rounded shadow-comic-sm -rotate-2">
+                        ACTIVE
+                      </span>
+                    )
                   ) : (
                     <span className="px-3 py-1 border-2 border-brand-ink bg-[#F5F1E5] text-brand-ink/40 font-display text-[9px] font-black uppercase rounded shadow-comic-sm">
                       🔒 LOCKED

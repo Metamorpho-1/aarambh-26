@@ -334,6 +334,17 @@ export async function finalizeRegistration(formData: any, paymentId: string, ord
   
   const dateOfPayment = `${day}-${month}-${year}`; // e.g., "24-May-26"
   const dateGroup = `${day}-${month}`; // e.g., "24-May"
+
+  const fatherName = formData.fatherName || '';
+  const fatherMobile = formData.fatherMobile || '';
+  const fatherEmail = formData.fatherEmail || '';
+  const motherName = formData.motherName || '';
+  const motherMobile = formData.motherMobile || '';
+  const motherEmail = formData.motherEmail || '';
+
+  const parentName = `Father: ${fatherName} | Mother: ${motherName}`;
+  const parentPhone = `Father: ${fatherMobile} | Mother: ${motherMobile}`;
+  const parentEmail = `Father: ${fatherEmail || 'N/A'} | Mother: ${motherEmail || 'N/A'}`;
   
   // 1. Save data to Firestore Registration Collection
   const registrationsRef = collection(db, 'registrations');
@@ -346,9 +357,9 @@ export async function finalizeRegistration(formData: any, paymentId: string, ord
     gender: formData.gender || 'N/A',
     course: formData.course || 'N/A',
     pincode: formData.pincode || (formData.address ? (formData.address.match(/\b\d{6}\b/)?.[0] || 'N/A') : 'N/A'),
-    parentName: formData.parentName || 'N/A',
-    parentPhone: formData.parentPhone || 'N/A',
-    parentEmail: formData.parentEmail || 'N/A',
+    parentName: parentName,
+    parentPhone: parentPhone,
+    parentEmail: parentEmail,
     paymentAmount: formData.coupon?.toUpperCase() === 'TESTTEST' ? 1 : 2500,
     receivedAmount: formData.coupon?.toUpperCase() === 'TESTTEST' ? 1 : 2500,
     dateOfPayment: dateOfPayment,
@@ -417,15 +428,15 @@ export async function finalizeRegistration(formData: any, paymentId: string, ord
           registeredAt: new Date().toISOString(),
           gender: formData.gender || 'N/A',
           course: formData.course || 'N/A',
-          parentName: formData.parentName || 'N/A',
-          parentPhone: formData.parentPhone || 'N/A',
-          parentEmail: formData.parentEmail || 'N/A',
-          fatherName: formData.parentName || 'N/A',
-          fatherMobile: formData.parentPhone || 'N/A',
-          fatherEmail: formData.parentEmail || 'N/A',
-          motherName: '',
-          motherMobile: '',
-          motherEmail: '',
+          parentName: parentName,
+          parentPhone: parentPhone,
+          parentEmail: parentEmail,
+          fatherName: fatherName || 'N/A',
+          fatherMobile: fatherMobile || 'N/A',
+          fatherEmail: fatherEmail || 'N/A',
+          motherName: motherName || 'N/A',
+          motherMobile: motherMobile || 'N/A',
+          motherEmail: motherEmail || 'N/A',
           address: formData.address || 'N/A',
           pincode: formData.pincode || (formData.address ? (formData.address.match(/\b\d{6}\b/)?.[0] || 'N/A') : 'N/A'),
           paymentAmount: formData.coupon?.toUpperCase() === 'TESTTEST' ? 1 : 2500,
