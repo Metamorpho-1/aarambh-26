@@ -73,8 +73,8 @@ export default function CustomCursor() {
     ];
 
     const spawnParticle = (x: number, y: number) => {
-      // Allow up to 25 words maximum on screen to accommodate bursts
-      if (particles.length >= 25) {
+      // Allow up to 4 words maximum on screen to keep it extremely clean
+      if (particles.length >= 4) {
         particles.shift();
       }
 
@@ -97,7 +97,7 @@ export default function CustomCursor() {
         opacity: 1,
         color,
         life: 0,
-        maxLife: 35 + Math.random() * 15 // slightly longer life
+        maxLife: 60 // stay on screen for exactly 1 second (60 frames at 60fps)
       });
     };
 
@@ -112,8 +112,8 @@ export default function CustomCursor() {
       const dy = y - lastSpawn.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      // Spawn a single word every 40px of movement so they form a readable chain
-      if (distance > 40) {
+      // Spawn a single word every 150px of movement so they stay sparse
+      if (distance > 150) {
         spawnParticle(x, y);
         lastSpawn.x = x;
         lastSpawn.y = y;
@@ -123,7 +123,7 @@ export default function CustomCursor() {
     const handleScroll = () => {
       const now = Date.now();
       // Occasional spawn on scroll to feel immersive
-      if (now - lastScrollSpawnTime > 1200 && particles.length < 25) {
+      if (now - lastScrollSpawnTime > 1200 && particles.length < 4) {
         const x = Math.random() * (window.innerWidth - 300) + 150;
         const y = window.innerHeight * 0.75;
         spawnParticle(x, y);
@@ -168,9 +168,9 @@ export default function CustomCursor() {
           p.scale += 0.003;
         }
 
-        // Keep text fully opaque for first 60% of life, then fade out quickly at the end
+        // Keep text fully opaque for first 75% of life (0.75s), then fade out over final 25% (0.25s)
         const lifeRatio = p.life / p.maxLife;
-        p.opacity = lifeRatio < 0.6 ? 1 : 1 - (lifeRatio - 0.6) / 0.4;
+        p.opacity = lifeRatio < 0.75 ? 1 : 1 - (lifeRatio - 0.75) / 0.25;
 
         if (p.life >= p.maxLife) {
           particles.splice(i, 1);
