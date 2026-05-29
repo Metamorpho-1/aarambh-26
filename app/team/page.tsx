@@ -17,19 +17,21 @@ import DoodleBg from '@/components/ui/DoodleBg';
 
 interface SectionHeadingProps {
   label: string;
-  sub: string;
+  sub?: string;
   accent?: string;
 }
 
 function SectionHeading({ label, sub, accent }: SectionHeadingProps) {
   return (
     <div className="text-center mb-10 relative z-10 flex flex-col items-center">
-      <span 
-        className="inline-block text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] px-2.5 sm:px-3.5 py-1 sm:py-1.5 border-comic text-brand-cloud rotate-[-2deg] shadow-comic-sm mb-4"
-        style={{ backgroundColor: accent || '#FF188C' }}
-      >
-        {sub}
-      </span>
+      {sub && (
+        <span 
+          className="inline-block text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] px-2.5 sm:px-3.5 py-1 sm:py-1.5 border-comic text-brand-cloud rotate-[-2deg] shadow-comic-sm mb-4"
+          style={{ backgroundColor: accent || '#FF188C' }}
+        >
+          {sub}
+        </span>
+      )}
       <h2 className="text-3xl sm:text-4xl font-display font-black text-brand-ink uppercase leading-none tracking-tight">
         {label}
       </h2>
@@ -47,8 +49,8 @@ export default function TeamPage() {
       borderColor = '#FF9A00'; // brand.orange
       gradient = 'linear-gradient(145deg, rgba(255, 154, 0, 0.15), rgba(3, 4, 4, 0.98))';
     } else if (type === 'osa') {
-      borderColor = '#0D21DD'; // brand.blue
-      gradient = 'linear-gradient(145deg, rgba(13, 33, 221, 0.15), rgba(3, 4, 4, 0.98))';
+      borderColor = '#FF9A00'; // Match VC brand.orange color scheme
+      gradient = 'linear-gradient(145deg, rgba(255, 154, 0, 0.15), rgba(3, 4, 4, 0.98))';
     } else if (type === 'orgHead') {
       borderColor = '#FF188C'; // brand.pink
       gradient = 'linear-gradient(145deg, rgba(255, 24, 140, 0.15), rgba(3, 4, 4, 0.98))';
@@ -75,7 +77,7 @@ export default function TeamPage() {
     return {
       image: member.photo || undefined,
       title: member.name,
-      subtitle: member.designation,
+      subtitle: type === 'tl' ? '' : member.designation,
       handle: member.socials?.linkedin ? '@' + member.name.toLowerCase().replace(/\s+/g, '') : undefined,
       location: member.department,
       borderColor,
@@ -85,8 +87,12 @@ export default function TeamPage() {
     };
   };
 
-  const vcItem = useMemo(() => [mapMemberToChromaItem(TEAM_DATA.vc, 'vc')], []);
-  const osaItems = useMemo(() => TEAM_DATA.osa.map(m => mapMemberToChromaItem(m, 'osa')), []);
+  const topRowItems = useMemo(() => [
+    { ...mapMemberToChromaItem(TEAM_DATA.vc, 'vc'), socials: undefined },
+    { ...mapMemberToChromaItem(TEAM_DATA.osa[0], 'osa'), socials: undefined } // Deepak Sogani
+  ], []);
+
+  const bottomRowItems = useMemo(() => TEAM_DATA.osa.slice(1).map(m => mapMemberToChromaItem(m, 'osa')), []); // Anushka, Vaibhav, Gajendra, Rajesh
 
   // Group team leaders into committees and cluster heads
   const groupedTeamLeaders = useMemo(() => {
@@ -144,13 +150,6 @@ export default function TeamPage() {
 
       {/* Header */}
       <header className="text-center mb-24 relative z-10">
-        <motion.span 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="page-eyebrow"
-        >
-          The Driving Force
-        </motion.span>
         <motion.h1 
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -172,36 +171,29 @@ export default function TeamPage() {
       {/* Hierarchy Section */}
       <div className="space-y-32 relative z-10">
         
-        {/* Tier 1: Vice Chancellor */}
-        <section className="flex flex-col items-center">
+        {/* Consolidated Leadership and Mentorship Grid */}
+        <section className="flex flex-col items-center w-full gap-12">
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
-            className="w-full text-center"
+            className="w-full flex flex-col items-center gap-12"
           >
-            <h2 className="text-xs uppercase font-extrabold tracking-[0.25em] text-accent-dark mb-8 flex items-center justify-center gap-2">
-              <Crown size={16} /> Patron Leadership
-            </h2>
-            <div className="flex justify-center w-full">
-              <ChromaGrid items={vcItem} radius={400} />
+            {/* Top Row: VC and Deepak Sogani */}
+            <div className="w-full flex justify-center">
+              <ChromaGrid items={topRowItems} radius={400} flipTrigger="none" />
+            </div>
+
+            {/* Bottom Row: Anushka, Vaibhav, Gajendra, Rajesh */}
+            <div className="w-full flex justify-center">
+              <ChromaGrid items={bottomRowItems} radius={400} flipTrigger="none" className="max-w-[1200px]" />
             </div>
           </motion.div>
         </section>
 
-        {/* Tier 2: Office of Student Affairs */}
-        <section className="flex flex-col items-center w-full">
-          <h2 className="text-xs uppercase font-extrabold tracking-[0.25em] text-brand-blue mb-10 flex items-center justify-center gap-2">
-            <GraduationCap size={18} /> Office of Student Affairs
-          </h2>
-          <div className="w-full flex justify-center">
-            <ChromaGrid items={osaItems} radius={400} />
-          </div>
-        </section>
-
         {/* ── SECTION 2: ORGANIZING HEADS ─────────────────────────────────── */}
         <section className="mb-20 sm:mb-28 overflow-hidden">
-          <SectionHeading label="Organizing Heads" sub="Command Core" accent="#FF188C" />
+          <SectionHeading label="Organizing Heads" accent="#FF188C" />
 
           {/* SVG definitions for torn-paper clipPaths and jagged filters */}
           <svg className="absolute w-0 h-0" width="0" height="0">
@@ -218,7 +210,12 @@ export default function TeamPage() {
           <div className="relative w-full max-w-4xl mx-auto aspect-[2/3] sm:aspect-[4/5] overflow-hidden rounded-3xl border-4 border-[#030404] shadow-[12px_12px_0px_#030404] bg-[#FEFEFC] select-none">
             {/* Texture overlay over the entire poster */}
             <div className="absolute inset-0 halftone-bg opacity-15 pointer-events-none z-30" />
-            <div className="absolute inset-0 bg-[url('/images/paper_texture.jpg')] opacity-10 mix-blend-multiply pointer-events-none z-30" />
+            <div 
+              className="absolute inset-0 opacity-[0.06] mix-blend-overlay pointer-events-none z-30"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+              }}
+            />
 
             {/* 1. VAISHNAVI PANEL (Top-Left) */}
             <div
@@ -246,7 +243,7 @@ export default function TeamPage() {
               <div className="absolute bottom-0 left-0 right-0 top-14 flex items-end justify-center">
                 <div className="relative w-[110%] sm:w-[100%] h-[110%] sm:h-[105%] transition-transform duration-500 group-hover:scale-105 origin-bottom -translate-x-[8%]">
                   <Image
-                    src="/images/PNG/Vaishnavi Shukla.png"
+                    src="/Team Photos/OH/Vaishnavi Shukla.webp"
                     alt="Vaishnavi Shukla"
                     fill
                     className="object-contain object-bottom"
@@ -281,7 +278,7 @@ export default function TeamPage() {
               <div className="absolute bottom-0 left-0 right-0 top-14 flex items-end justify-center">
                 <div className="relative w-[110%] sm:w-[100%] h-[110%] sm:h-[105%] transition-transform duration-500 group-hover:scale-105 origin-bottom translate-x-[8%]">
                   <Image
-                    src="/images/PNG/Ambika Dalmia.png"
+                    src="/Team Photos/OH/Ambika Dalmia.webp"
                     alt="Ambika Dalmia"
                     fill
                     className="object-contain object-bottom"
@@ -308,15 +305,13 @@ export default function TeamPage() {
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-25">
                 <span className="font-display text-[90px] sm:text-[130px] font-black uppercase text-white tracking-tight rotate-3">VEDIKA</span>
               </div>
-              <div className="absolute top-6 left-1/2 -translate-x-1/2 text-white/40 font-mono text-[9px] sm:text-[11px] font-black tracking-[0.3em] uppercase whitespace-nowrap">
-                ★ SENIOR COMMAND CORE ★
-              </div>
+
 
               {/* Photo */}
               <div className="absolute bottom-0 left-0 right-0 top-12 flex items-end justify-center">
                 <div className="relative w-[95%] sm:w-[90%] h-[105%] sm:h-[110%]">
                   <Image
-                    src="/images/PNG/Vedika Agrawal.png"
+                    src="/Team Photos/OH/Vedika Agrawal.webp"
                     alt="Vedika Agrawal"
                     fill
                     className="object-contain object-bottom transition-transform duration-500 group-hover:scale-105 origin-bottom drop-shadow-[0_12px_24px_rgba(0,0,0,0.5)]"
@@ -351,7 +346,7 @@ export default function TeamPage() {
               <div className="absolute bottom-0 left-0 right-0 top-10 flex items-end justify-center">
                 <div className="relative w-[105%] sm:w-[95%] h-[110%] sm:h-[105%] transition-transform duration-500 group-hover:scale-105 origin-bottom -translate-x-[15%] -translate-y-6">
                   <Image
-                    src="/images/PNG/Aman Pratap Singh.png"
+                    src="/Team Photos/OH/Aman Pratap Singh.webp"
                     alt="Aman Pratap Singh"
                     fill
                     className="object-contain object-bottom drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)]"
@@ -386,7 +381,7 @@ export default function TeamPage() {
               <div className="absolute bottom-0 left-0 right-0 top-10 flex items-end justify-center">
                 <div className="relative w-[105%] sm:w-[95%] h-[110%] sm:h-[105%] transition-transform duration-500 group-hover:scale-105 origin-bottom translate-x-[15%] -translate-y-6">
                   <Image
-                    src="/images/PNG/Tanik Gupta.png"
+                    src="/Team Photos/OH/Tanik Gupta.webp"
                     alt="Tanik Gupta"
                     fill
                     className="object-contain object-bottom drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)]"
@@ -478,10 +473,10 @@ export default function TeamPage() {
 
             {/* 7. HIGH-FIDELITY OVERLAY LABELS (Clean, bold, stickerless typography at root level) */}
             
-            {/* Vedika (Senior OH - Centered top of photo, small & elegant) */}
+            {/* Vedika (OH - Centered top of photo, small & elegant) */}
             <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 text-center select-none scale-90 sm:scale-100 transition-transform duration-300">
               <span className="font-mono text-[7px] sm:text-[9px] font-extrabold text-[#FF188C] uppercase tracking-[0.25em] drop-shadow-[0_1.5px_2px_rgba(0,0,0,0.85)] block mb-0.5">
-                👑 SENIOR ORGANIZING HEAD
+                ORGANIZING HEAD
               </span>
               <h4 className="font-display text-sm sm:text-2xl font-black text-white uppercase leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] flex flex-col items-center">
                 <span>VEDIKA</span>
@@ -540,7 +535,7 @@ export default function TeamPage() {
         <section className="flex flex-col items-center pt-8 border-t border-brand-ink/10 w-full">
           <div className="w-full text-center mb-16">
             <h2 className="text-3xl font-display font-black text-brand-ink flex items-center justify-center gap-2 uppercase tracking-wide">
-              <Users className="text-brand-pink" size={28} /> Team Leaders
+              Team Leaders
             </h2>
             <p className="text-sm text-brand-ink/60 mt-2 font-mono uppercase tracking-wider">
               Coordinators of Aarambh &apos;26 by Committee
@@ -560,7 +555,7 @@ export default function TeamPage() {
                     </h3>
                     <div className="h-[2px] bg-brand-ink/10 flex-grow" />
                   </div>
-                  <ChromaGrid items={mappedItems} radius={500} />
+                  <ChromaGrid items={mappedItems} radius={500} flipTrigger="none" />
                 </div>
               );
             })}
