@@ -455,7 +455,7 @@ const col2Images = PHOTOS.slice(16, 32).map(p => p.src);
 const col3Images = PHOTOS.slice(32, 48).map(p => p.src);
 const col4Images = PHOTOS.slice(48, 64).map(p => p.src);
 
-
+let hasPlayedIntro = false;
 
 export default function Home() {
   const router = useRouter();
@@ -510,11 +510,17 @@ export default function Home() {
   const [loadingComplete, setLoadingComplete] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
 
-  // Show loading screen animation on every page load and reload
+  // Show loading screen animation on hard refresh, but skip on client-side navigation
   useEffect(() => {
     setIsMounted(true);
-    setIntroStarted(true);
-    setLoadingComplete(false);
+    if (!hasPlayedIntro) {
+      setIntroStarted(true);
+      setLoadingComplete(false);
+      hasPlayedIntro = true;
+    } else {
+      setIntroStarted(true);
+      setLoadingComplete(true);
+    }
   }, []);
 
   // Generate Mario Animation Arrays for loading screen
@@ -525,6 +531,7 @@ export default function Home() {
   const marioLeftTimes: number[] = [0];
   const marioY: number[] = [0];
   const marioYTimes: number[] = [0];
+  const marioYEasings: any[] = [];
   
   for (let i = 0; i < NUM_SLICES; i++) {
     const hitTimeSec = (i + 1) * 1.0; 
@@ -537,23 +544,18 @@ export default function Home() {
     const jumpEnd = Math.min(1, hitNorm + 0.05);
     marioY.push(0, -80, 0);
     marioYTimes.push(jumpStart, hitNorm, jumpEnd);
+    marioYEasings.push("linear", "easeOut", "easeIn");
   }
 
   // Mario Intro Animation Sequence
   useEffect(() => {
     if (!introStarted || loadingComplete) return;
     
-    const timeouts = Array.from({ length: 5 }).map((_, i) => {
-      const hitTimeMs = (i + 1) * 1000;
-      return setTimeout(() => playSynthSound('bang'), hitTimeMs - 100); 
-    });
-    
     const completeTimeout = setTimeout(() => {
       setLoadingComplete(true);
     }, TOTAL_DURATION * 1000 + 500);
 
     return () => {
-      timeouts.forEach(clearTimeout);
       clearTimeout(completeTimeout);
     };
   }, [introStarted, loadingComplete]);
@@ -738,35 +740,29 @@ export default function Home() {
                 </div>
               </div>
               
-              {/* Mario Sprite */}
-              <motion.div 
-                animate={{ left: marioLeft }}
-                transition={{ left: { duration: TOTAL_DURATION, times: marioLeftTimes, ease: "linear" } }}
-                className="absolute bottom-0 w-8 h-10"
-              >
-                <motion.div
-                   animate={{ y: marioY }}
-                   transition={{ y: { duration: TOTAL_DURATION, times: marioYTimes, ease: "easeOut" } }}
-                   className="relative w-full h-full"
+              {/* Mario Sprite Track (GPU Accelerated) */}
+              <div className="absolute bottom-[-16px] w-full h-16 pointer-events-none">
+                <motion.div 
+                  animate={{ x: marioLeft }}
+                  transition={{ x: { duration: TOTAL_DURATION, times: marioLeftTimes, ease: "linear" } }}
+                  className="absolute w-full h-full"
                 >
-                  {/* Hat */}
-                  <div className="absolute top-0 left-[4px] w-[20px] h-[6px] bg-brand-orange" />
-                  {/* Face */}
-                  <div className="absolute top-[6px] left-[8px] w-[16px] h-[10px] bg-[#fcdbb6]" />
-                  {/* Mustache/Eye */}
-                  <div className="absolute top-[8px] left-[18px] w-[8px] h-[4px] bg-brand-ink" />
-                  {/* Body */}
-                  <div className="absolute top-[16px] left-[6px] w-[16px] h-[10px] bg-brand-orange" />
-                  {/* Overalls */}
-                  <div className="absolute top-[20px] left-[8px] w-[12px] h-[8px] bg-brand-blue" />
-                  {/* Legs */}
-                  <div className="absolute top-[28px] left-[8px] w-[6px] h-[8px] bg-brand-blue" />
-                  <div className="absolute top-[28px] left-[14px] w-[6px] h-[8px] bg-brand-blue" />
-                  {/* Shoes */}
-                  <div className="absolute top-[36px] left-[8px] w-[8px] h-[4px] bg-brand-ink" />
-                  <div className="absolute top-[36px] left-[16px] w-[8px] h-[4px] bg-brand-ink" />
+                  <motion.div
+                     animate={{ y: marioY }}
+                     transition={{ y: { duration: TOTAL_DURATION, times: marioYTimes, ease: marioYEasings } }}
+                     className="absolute left-0 w-16 h-16"
+                  >
+                  <div className="w-full h-full relative flex items-center justify-center">
+                    <img 
+                      src="/mario-transparent.gif"
+                      alt="Mario Running"
+                      className="w-full h-full object-contain -scale-x-100"
+                      style={{ filter: "drop-shadow(0 10px 15px rgba(0,0,0,0.5))" }}
+                    />
+                  </div>
+                  </motion.div>
                 </motion.div>
-              </motion.div>
+              </div>
             </div>
             <h3 className="font-display font-black text-brand-pink text-xl mt-12 animate-pulse uppercase">LOADING...</h3>
           </motion.div>
