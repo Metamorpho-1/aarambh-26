@@ -614,7 +614,7 @@ export default function GalleryLanding() {
       e.preventDefault()
       const touchY = e.touches[0].clientY
       const deltaY = touchStartY - touchY
-      targetZOffsetRef.current += deltaY * 3.0
+      targetZOffsetRef.current += deltaY * 1.2
       touchStartY = touchY
     }
 
@@ -917,7 +917,7 @@ export default function GalleryLanding() {
 
         .tunnel-card {
           position: absolute;
-          width: clamp(170px, 22vw, 320px);
+          width: clamp(240px, 35vw, 500px);
           aspect-ratio: 3 / 2;
           border: 3.5px solid #030404;
           border-radius: 12px;

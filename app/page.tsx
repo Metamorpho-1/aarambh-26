@@ -1,12 +1,15 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { motion, AnimatePresence, Variants, useScroll, useTransform } from 'framer-motion';
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AboutSection from '@/components/about';
-
+import Preloader from '@/components/Preloader';
+import ScheduleTimeline from '@/components/ScheduleTimeline';
+import SpeakersCarousel from '@/components/SpeakersCarousel';
+import FaqAccordion from '@/components/FaqAccordion';
 interface TimeLeft {
   days: number;
   hours: number;
@@ -455,6 +458,17 @@ export default function Home() {
   const [galleryMounted, setGalleryMounted] = useState(false);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, mins: 0, secs: 0 });
   const [particles, setParticles] = useState<Particle[]>([]);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [hypeCount, setHypeCount] = useState(842);
+  const [ticketFlipped, setTicketFlipped] = useState(false);
+  const [zeroGravity, setZeroGravity] = useState(false);
+  const [isPreloading, setIsPreloading] = useState(true);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const x = (e.clientX / (typeof window !== 'undefined' ? window.innerWidth : 1000)) * 2 - 1;
+    const y = (e.clientY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 2 - 1;
+    setMousePos({ x, y });
+  };
 
   // Function to create comic dot explosion particles
   const spawnParticles = (x: number, y: number) => {
@@ -491,10 +505,16 @@ export default function Home() {
       });
     }, 1000);
 
+    const hypeInterval = setInterval(() => {
+      if (Math.random() > 0.6) {
+        setHypeCount(prev => prev + Math.floor(Math.random() * 3) + 1);
+      }
+    }, 3500);
+
     // Global listener for screen clicks to synthesis clicks and pop comic dots
     const handleGlobalClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'BUTTON' || target.closest('a')) return;
+      if (target.tagName === 'INPUT' || target.tagName === 'BUTTON' || target.closest('a') || target.closest('.ticket-stub')) return;
       spawnParticles(e.clientX, e.clientY);
       playSynthSound('click');
     };
@@ -503,6 +523,7 @@ export default function Home() {
 
     return () => {
       clearInterval(interval);
+      clearInterval(hypeInterval);
       window.removeEventListener('click', handleGlobalClick);
     };
   }, []);
@@ -512,6 +533,7 @@ export default function Home() {
     { text: "POW!", type: "pow", color: "bg-brand-orange text-brand-ink font-extrabold", top: "15%", right: "8%", starburst: true, rotate: "6deg" },
     { text: "BANG!", type: "bang", color: "bg-brand-blue text-brand-cloud", bottom: "25%", left: "8%", starburst: true, rotate: "-12deg" },
     { text: "APPROVED", type: "stamp", subtext: "BY THE SQUAD", color: "bg-brand-cloud text-brand-pink border-4 border-dashed border-brand-pink", bottom: "22%", right: "8%", stamp: true, rotate: "15deg" },
+    { text: "JULY 12-21", type: "click", subtext: "JKLU CAMPUS, JAIPUR", color: "bg-[#FDE047] border-2 border-brand-ink", top: "35%", right: "12%", note: true, rotate: "8deg" },
   ];
 
   const countdownBlocks = [
@@ -523,9 +545,14 @@ export default function Home() {
 
 
   return (
-    <main className="flex flex-col items-center overflow-x-hidden relative bg-brand-ink text-brand-cloud font-sans">
-      {/* Noise/Grain Overlay */}
-      <div className="noise-overlay" />
+    <>
+      <AnimatePresence mode="wait">
+        {isPreloading && <Preloader key="preloader" onComplete={() => setIsPreloading(false)} />}
+      </AnimatePresence>
+
+      <main className={`flex flex-col items-center overflow-x-hidden relative bg-brand-ink text-brand-cloud font-sans ${isPreloading ? 'h-screen overflow-hidden' : ''}`}>
+        {/* Noise/Grain Overlay */}
+        <div className="noise-overlay" />
 
       {/* Particle Overlay for click explosions */}
       <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
@@ -560,23 +587,34 @@ export default function Home() {
       </div>
 
       {/* Comic Magazine Cover Hero */}
-      <section className="relative w-full min-h-screen flex flex-col items-center justify-center py-28 px-4 overflow-hidden bg-brand-cloud text-brand-ink">
+      <motion.section 
+        onMouseMove={handleMouseMove}
+        className="relative w-full min-h-screen flex flex-col items-center justify-center py-28 px-4 overflow-hidden bg-brand-cloud text-brand-ink"
+      >
+        {/* Zero Gravity Toggle Button */}
+        <button 
+          onClick={() => setZeroGravity(!zeroGravity)}
+          className={`absolute top-24 md:top-6 right-6 z-50 px-4 py-2 font-display font-black text-xs uppercase border-2 border-brand-ink shadow-comic-sm transition-all ${zeroGravity ? 'bg-brand-pink text-brand-cloud' : 'bg-brand-cloud text-brand-ink'}`}
+        >
+          {zeroGravity ? 'GRAVITY: OFF' : 'GRAVITY: ON'}
+        </button>
+
+        {/* 3D Tilt Wrapper */}
+        <motion.div 
+          className="relative w-full h-full flex flex-col items-center justify-center"
+          animate={{ rotateX: mousePos.y * -6, rotateY: mousePos.x * 6 }}
+          style={{ perspective: 1200, transformStyle: "preserve-3d" }}
+          transition={{ type: "spring", stiffness: 75, damping: 20 }}
+        >
         
-        {/* Comic Pattern Backdrop */}
-        <div className="absolute inset-0 bg-halftone-black opacity-30 pointer-events-none" />
-        
-        {/* Abstract comic background shapes */}
-        <div className="absolute top-12 left-12 w-64 h-64 bg-brand-pink/15 rounded-full blur-[80px] pointer-events-none" />
-        <div className="absolute bottom-20 right-20 w-[450px] h-[450px] bg-brand-orange/15 rounded-full blur-[100px] pointer-events-none" />
-        
-        {/* Huge Tilted AARAMBH 26 Watermark */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden z-0">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 w-[120vw] text-center opacity-[0.04]">
-            <h1 style={{ fontFamily: "var(--font-display)", fontSize: 'clamp(3rem, 8vw, 8rem)', fontWeight: 900, color: '#030404', lineHeight: 0.8, letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>
-              AARAMBH&apos;26
-            </h1>
-          </div>
+        {/* Animated Fluid Marble Background */}
+        <div className="fluid-bg">
+          <div className="fluid-blob fluid-blob-1" />
+          <div className="fluid-blob fluid-blob-2" />
+          <div className="fluid-blob fluid-blob-3" />
         </div>
+        
+        {/* Watermark removed as requested for cleaner background */}
         
         {/* Draggable Pop-Art Stickers with synthesized audio triggers */}
         <div className="hidden lg:block absolute inset-0 z-10 pointer-events-none">
@@ -586,6 +624,12 @@ export default function Home() {
               drag
               dragConstraints={{ left: -400, right: 400, top: -200, bottom: 200 }}
               dragTransition={{ bounceStiffness: 600, bounceDamping: 25 }}
+              animate={zeroGravity ? {
+                y: [0, Math.random() * -300 - 100, Math.random() * 300 + 100, 0],
+                x: [0, Math.random() * 300 + 100, Math.random() * -300 - 100, 0],
+                rotate: [0, 180, 360],
+              } : {}}
+              transition={zeroGravity ? { duration: 15 + Math.random() * 10, repeat: Infinity, ease: 'linear' } : {}}
               whileHover={{ scale: 1.15, zIndex: 50, rotate: "0deg" }}
               whileDrag={{ scale: 1.2, zIndex: 100, cursor: "grabbing" }}
               onDragStart={(e) => {
@@ -621,6 +665,17 @@ export default function Home() {
                     {sticker.subtext}
                   </span>
                 </div>
+              ) : sticker.note ? (
+                <div className={`w-36 h-36 flex flex-col items-center justify-center text-center p-3 shadow-comic ${sticker.color}`}>
+                  <div className="w-10 h-3 bg-brand-pink border-2 border-brand-ink absolute -top-1 opacity-80" />
+                  <span className="font-display font-black text-xl leading-none uppercase tracking-tighter text-brand-ink">
+                    {sticker.text}
+                  </span>
+                  <div className="w-16 h-[2px] bg-brand-ink my-3 opacity-20" />
+                  <span className="text-[10px] font-black uppercase tracking-widest leading-tight text-brand-ink">
+                    {sticker.subtext}
+                  </span>
+                </div>
               ) : (
                 <div className={`px-5 py-3 font-display font-black text-sm uppercase rounded-md border-2 border-brand-ink ${sticker.color}`}>
                   {sticker.text}
@@ -643,29 +698,32 @@ export default function Home() {
           </div>
 
           {/* Comic Styled Heading Stack */}
-          <div className="relative mb-8 select-none p-3 max-w-full">
-            {/* Outline back text */}
-            <h1 className="font-display text-6xl sm:text-7xl md:text-[6.5rem] lg:text-[8rem] font-black uppercase leading-none tracking-tighter text-outline-pink select-none">
-              BOLD & BEYOND
-            </h1>
-            {/* Centered Primary Logo */}
-            <div className="absolute inset-0 flex items-center justify-center p-2 mt-2">
+          <div className="relative mb-8 select-none p-3 w-full flex items-center justify-center">
+            {/* Centered Primary Hindi Logo */}
+            <motion.div 
+              animate={{ x: mousePos.x * -10, y: mousePos.y * -10 }}
+              transition={{ type: "spring", stiffness: 150, damping: 20 }}
+            >
               <Image
-                src="/logo.svg"
-                alt="AARAMBH'26"
-                width={550}
-                height={120}
-                className="w-full max-w-xs sm:max-w-md md:max-w-xl h-auto drop-shadow-[8px_8px_0px_#030404] hover:scale-[1.03] transition-transform duration-300 border-comic p-4 bg-brand-cloud rounded-xl"
+                src="/aarambh_logo_removebg.png"
+                alt="आरम्भ'26"
+                width={800}
+                height={250}
+                className="w-full max-w-sm sm:max-w-lg md:max-w-3xl h-auto drop-shadow-[12px_12px_0px_#030404] hover:scale-[1.03] transition-transform duration-300"
                 priority
                 loading="eager"
               />
-            </div>
+            </motion.div>
           </div>
 
           {/* Narrative Dialogue Box */}
-          <div className="border-comic bg-brand-ink text-brand-cloud p-6 rounded-xl max-w-2xl shadow-comic rotate-1 bg-halftone-cloud mb-10">
-            <p className="font-display font-black text-sm sm:text-base leading-relaxed tracking-wide uppercase">
-              “SQUAD REPORT: A FRESH BEGINNING IS INITIATED! CLICK ANYWHERE TO UNLEASH HALFTONE PARTICLES AND SYNTH SOUNDS!”
+          <div className="border-comic bg-brand-ink text-brand-cloud p-6 rounded-xl max-w-3xl shadow-comic rotate-1 bg-halftone-cloud mb-12 mx-auto">
+            <p className="font-display font-black text-[12px] sm:text-sm md:text-base leading-relaxed tracking-widest text-brand-pink mb-1 uppercase">
+              AARAMBH — THE BEGINNING OF SOMETHING GREATER.
+            </p>
+            <p className="font-display font-bold text-[10px] sm:text-xs md:text-sm leading-relaxed tracking-wider uppercase text-brand-cloud/90">
+              WHERE STRANGERS BECOME FRIENDS AND DREAMS FIND DIRECTION.
+              <span className="text-brand-orange ml-1">THIS IS NOT JUST AN INDUCTION—THIS IS YOUR FIRST STEP TOWARD THE FUTURE.</span>
             </p>
           </div>
 
@@ -697,27 +755,64 @@ export default function Home() {
             ))}
           </div>
 
+          {/* Hype Meter */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center mb-8 border-comic p-3 bg-brand-cloud shadow-comic-sm rotate-1 z-20"
+          >
+            <span className="font-display font-black text-[10px] uppercase tracking-widest text-brand-pink mb-1">LIVE REGISTRATIONS</span>
+            <div className="flex gap-1 bg-brand-ink p-1 rounded-sm">
+              {String(hypeCount).padStart(5, '0').split('').map((num, i) => (
+                <div key={i} className="w-6 h-8 md:w-8 md:h-10 bg-brand-cloud border-2 border-brand-ink flex items-center justify-center overflow-hidden">
+                   <motion.span 
+                      key={`${i}-${num}`}
+                      initial={{ y: -20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      className="font-display font-black text-xl md:text-2xl text-brand-ink"
+                   >
+                     {num}
+                   </motion.span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-4 z-20">
+            <Link href="/register" className="border-comic bg-brand-pink text-brand-cloud font-display font-black text-lg px-8 py-4 shadow-comic hover:translate-x-1 hover:translate-y-1 hover:shadow-comic-sm transition-all rotate-1 hover:rotate-2">
+              REGISTER NOW
+            </Link>
+            <Link href="/gallery" className="border-comic bg-brand-blue text-brand-cloud font-display font-black text-lg px-8 py-4 shadow-comic hover:translate-x-1 hover:translate-y-1 hover:shadow-comic-sm transition-all -rotate-1 hover:-rotate-2">
+              EXPLORE GALLERY
+            </Link>
+          </div>
+
         </motion.div>
-      </section>
+        </motion.div>
+      </motion.section>
 
       {/* Torn paper visual separation */}
       <TornPaperDivider color="fill-brand-ink" />
 
       {/* Comic styled strip/marquee */}
-      <section className="w-full py-4 border-y-4 border-brand-ink bg-brand-cloud text-brand-ink overflow-hidden z-10">
+      <section className="w-full py-4 border-y-4 border-brand-ink bg-[#FF9A00] text-brand-ink overflow-hidden z-10">
         <div className="w-full flex whitespace-nowrap overflow-hidden">
           <motion.div
             variants={marqueeVariants}
             animate="animate"
             className="flex gap-16 font-display font-black text-base sm:text-lg uppercase tracking-wider select-none"
           >
-            {[...Array(4)].map((_, i) => (
+            {[...Array(6)].map((_, i) => (
               <React.Fragment key={i}>
-                <span className="text-brand-pink">💥 BOLD & BEYOND!</span>
-                <span className="text-brand-blue">🌟 LIMITLESS!</span>
-                <span className="text-brand-orange">⚡ ENERGY!</span>
-                <span className="text-brand-ink">🎨 CRASH!</span>
-                <span className="text-brand-pink">🔥 FEARLESS!</span>
+                <span className="text-brand-ink">🔥 REGISTRATIONS OPEN</span>
+                <span className="text-brand-ink font-bold opacity-30">•</span>
+                <span className="text-brand-ink">🎸 LIVE DJ NIGHTS</span>
+                <span className="text-brand-ink font-bold opacity-30">•</span>
+                <span className="text-brand-ink">🎤 15+ GUEST SPEAKERS</span>
+                <span className="text-brand-ink font-bold opacity-30">•</span>
+                <span className="text-brand-ink">🏆 50+ EVENTS</span>
+                <span className="text-brand-ink font-bold opacity-30">•</span>
               </React.Fragment>
             ))}
           </motion.div>
@@ -732,6 +827,12 @@ export default function Home() {
       <section className="w-full z-10 bg-brand-ink">
         <AboutSection />
       </section>
+
+      {/* Advanced Interactive Sections */}
+      <ScheduleTimeline />
+      <SpeakersCarousel />
+      <FaqAccordion />
+
 {/* Memories of 2025 Gallery Showcase Section */}
 <section id="gallery-showcase" className="w-full relative z-10 bg-brand-cloud border-t-4 border-brand-ink text-brand-ink">
   <style dangerouslySetInnerHTML={{ __html: `
@@ -1097,5 +1198,6 @@ export default function Home() {
 
 
     </main>
+    </>
   );
 }
